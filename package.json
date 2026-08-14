@@ -1,6 +1,6 @@
 {
   "name": "scorm-extractor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Extract linearized screen text and media assets from SCORM packages (HoApp first).",
   "type": "module",
   "engines": {

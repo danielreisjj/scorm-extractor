@@ -79,8 +79,11 @@ const imageAssetFields = {
   originalPath: z.string(),
   filename: z.string(),
   alt: z.string(),
+  /** Pixel width from the file header (`null` if unread). @since 0.3.0 */
   width: z.number().int().nonnegative().nullable(),
+  /** Pixel height from the file header (`null` if unread). @since 0.3.0 */
   height: z.number().int().nonnegative().nullable(),
+  /** File size in the ZIP (`null` if missing). @since 0.3.0 */
   byteSize: z.number().int().nonnegative().nullable(),
   bytesStatus: bytesStatusSchema,
 };
@@ -139,6 +142,7 @@ export const videoAssetJSONSchema = z.object({
 /**
  * SCORM CMI interaction types (IEEE 1484.11.1 / SCORM 2004).
  * Only `"choice"` is structured by parsers today; unrecognized items use `"other"`.
+ * @since 0.3.0
  */
 export const QUIZ_INTERACTION_TYPES = [
   "choice",
@@ -152,8 +156,10 @@ export const QUIZ_INTERACTION_TYPES = [
   "other",
 ] as const;
 
+/** @since 0.3.0 */
 export const quizInteractionTypeSchema = z.enum(QUIZ_INTERACTION_TYPES);
 
+/** @since 0.3.0 */
 export const quizResponseSchema = z.object({
   text: z.string(),
   /**
@@ -163,11 +169,13 @@ export const quizResponseSchema = z.object({
   correct: z.boolean(),
 });
 
+/** @since 0.3.0 */
 export const quizFeedbackSchema = z.object({
   correct: z.string().nullable(),
   incorrect: z.string().nullable(),
 });
 
+/** @since 0.3.0 */
 export const quizQuestionSchema = z.object({
   type: quizInteractionTypeSchema,
   question: z.string(),
@@ -176,6 +184,7 @@ export const quizQuestionSchema = z.object({
   feedback: quizFeedbackSchema.nullable(),
 });
 
+/** Structured quiz payload on `kind: "quiz"` documents. @since 0.3.0 */
 export const quizSchema = z.object({
   questions: z.array(quizQuestionSchema),
 });
@@ -258,10 +267,15 @@ export type BytesStatus = z.infer<typeof bytesStatusSchema>;
 export type ImageAsset = z.infer<typeof imageAssetSchema>;
 export type PdfAsset = z.infer<typeof pdfAssetSchema>;
 export type VideoAsset = z.infer<typeof videoAssetSchema>;
+/** @since 0.3.0 */
 export type QuizInteractionType = z.infer<typeof quizInteractionTypeSchema>;
+/** @since 0.3.0 */
 export type QuizResponse = z.infer<typeof quizResponseSchema>;
+/** @since 0.3.0 */
 export type QuizFeedback = z.infer<typeof quizFeedbackSchema>;
+/** @since 0.3.0 */
 export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
+/** @since 0.3.0 */
 export type Quiz = z.infer<typeof quizSchema>;
 export type ExtractedDocument = z.infer<typeof documentSchema>;
 export type ExtractionResult = z.infer<typeof extractionResultSchema>;

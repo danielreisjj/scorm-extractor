@@ -6,7 +6,7 @@ TypeScript library for Node.js 20+ (ESM). Call `extract()` from your application
 
 | | |
 | --- | --- |
-| Version | `0.2.0` |
+| Version | `0.3.0` |
 | Runtime | Node.js ≥ 20 (ESM) |
 | Format | HoApp, AST OnePage |
 | License | UNLICENSED |
@@ -72,6 +72,41 @@ const forOcr = doc.images.filter((image) => {
   return true;
 });
 ```
+
+### Media bytes
+
+Assets can be consumed **without** binary payloads (path inside the ZIP) or **with** them (embedded, then base64 in JSON). Metadata is always present: `filename`, `mimeType`, `bytesStatus`, and `originalPath` (path inside the ZIP; `null` on remote videos). Images also have `width`, `height`, and `byteSize` even when bytes are not included.
+
+**Without bytes.** Skip loading payloads on `extract()`, and skip encoding them in JSON:
+
+```ts
+const result = await extract("./course.zip", {
+  includeBytes: { images: false, pdfs: false, videos: false },
+});
+const json = toJSON(result, { omitBytes: true });
+
+for (const doc of result.documents) {
+  for (const image of doc.images) {
+    // image.originalPath — e.g. "midias/imagens/foto.png"; open the ZIP and read that entry
+  }
+  for (const pdf of doc.pdfs) {
+    // pdf.originalPath
+  }
+}
+```
+
+`bytesStatus: "omitted"` means the file exists and bytes were not requested — the expected status in this mode. Use `originalPath` to locate the file in the package for OCR, transcription, or anything else.
+
+`includeBytes` controls whether `extract()` fills `bytes`. `omitBytes` only affects `toJSON()`: it drops payloads from JSON and leaves `bytesStatus` unchanged. For path-only work, set `includeBytes` as above; add `omitBytes: true` when serializing.
+
+**With bytes.** Defaults are `images: true`, `pdfs: true`, `videos: false`. Loaded `Uint8Array` values become `{ encoding: "base64", data }` in `toJSON(result)`. Enable `includeBytes.videos` only for local files; Vimeo/YouTube stay `bytes: null` with a `url`.
+
+| `bytesStatus` | Meaning |
+| --- | --- |
+| `present` | Bytes were loaded |
+| `omitted` | File is in the ZIP; bytes were not requested |
+| `missing` | File is not in the ZIP |
+| `remote` | Hosted video (Vimeo/YouTube); use `url` |
 
 Contract details, field notes, and consumer patterns: [docs/guide.md](docs/guide.md).
 

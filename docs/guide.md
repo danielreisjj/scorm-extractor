@@ -118,12 +118,22 @@ This library does **not** filter, crop, or drop images by size. It only exposes 
 
 ### Bytes: when filled vs null
 
+`includeBytes` on `extract()` controls whether `bytes` is a `Uint8Array`. Path-only consumers pass `{ images: false, pdfs: false, videos: false }` and use `originalPath` to read the file from the ZIP. `toJSON(..., { omitBytes: true })` drops payloads from JSON without changing `bytesStatus`.
+
 | Call | `images[].bytes` | `pdfs[].bytes` | `videos[].bytes` |
 | --- | --- | --- | --- |
 | `extract(zip)` defaults | filled | filled | `null` (unless `includeBytes.videos: true` and local file) |
+| `extract(zip, { includeBytes: { images: false, pdfs: false, videos: false } })` | `null` (`omitted` if the file exists) | `null` (`omitted` if the file exists) | `null` |
 | `toJSON(result, { omitBytes: true })` | omitted in JSON | omitted in JSON | omitted in JSON |
 
-Use default `extract()` (or enable `includeBytes`) when you need binary payloads for OCR. Remote videos (Vimeo/YouTube) always have `bytes: null` and a `url`. `width` / `height` / `byteSize` on images do not depend on this table.
+| `bytesStatus` | Meaning |
+| --- | --- |
+| `present` | Bytes were loaded |
+| `omitted` | File is in the ZIP; bytes were not requested |
+| `missing` | File is not in the ZIP |
+| `remote` | Vimeo/YouTube — `bytes` is always `null`; use `url` |
+
+Use default `extract()` (or enable `includeBytes`) when you need binary payloads. Remote videos always have `bytes: null` and a `url`. `width` / `height` / `byteSize` on images do not depend on this table.
 
 ### JSON transport
 

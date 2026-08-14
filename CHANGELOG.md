@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-14
+
 ### Added
 
 - Nested ZIP envelope detection: if `imsmanifest.xml` is not at the ZIP root, the first-level folder that contains it becomes the content root (detection, parsers, asset paths).
@@ -17,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `schemaVersion` incremented to **2** (additive output: new `quiz` field; nothing removed).
+- Output `schemaVersion` went from **1** to **2**. Additive only: `documents[].quiz` was added on `kind: "quiz"` screens; no existing fields were removed.
 
 ## [0.2.0] - 2026-08-14
 
