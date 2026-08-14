@@ -5,6 +5,12 @@ export const DEFAULT_MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024;
 /** Output contract version. Increment when the ExtractionResult shape changes. */
 export const EXTRACTION_SCHEMA_VERSION = 2;
 
+/**
+ * Per-type flags for loading asset `bytes` (`Uint8Array`) onto the result.
+ * Base64 encoding happens only in `toJSON()`, not on these fields.
+ *
+ * Defaults are all `false` (@since 0.4.0; images and PDFs were `true` through 0.3.0).
+ */
 export const includeBytesSchema = z
   .object({
     images: z.boolean().optional(),
@@ -34,6 +40,11 @@ export type ResolvedExtractOptions = {
   maxUncompressedBytes: number;
 };
 
+/**
+ * Apply extract option defaults.
+ * `includeBytes.images`, `.pdfs`, and `.videos` default to `false`
+ * (@since 0.4.0; images and PDFs were `true` through 0.3.0).
+ */
 export function resolveExtractOptions(
   options: ExtractOptions = {},
 ): ResolvedExtractOptions {
@@ -41,8 +52,8 @@ export function resolveExtractOptions(
   return {
     maxUncompressedBytes: parsed.maxUncompressedBytes,
     includeBytes: {
-      images: parsed.includeBytes.images ?? true,
-      pdfs: parsed.includeBytes.pdfs ?? true,
+      images: parsed.includeBytes.images ?? false,
+      pdfs: parsed.includeBytes.pdfs ?? false,
       videos: parsed.includeBytes.videos ?? false,
     },
   };

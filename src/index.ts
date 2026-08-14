@@ -13,7 +13,8 @@ import { createParserRegistry } from "./infrastructure/parsers/registry.js";
  * `detectedFormat` hint.
  *
  * @param source - File path, `file:` URL, `Uint8Array`, or `Buffer`
- * @param options - Byte inclusion and ZIP size limits
+ * @param options - Byte inclusion and ZIP size limits. Since 0.4.0,
+ *   `includeBytes` defaults to `{ images: false, pdfs: false, videos: false }`.
  * @returns Typed {@link ExtractionResult} with per-screen markers and assets
  * @throws {InvalidInputError} Invalid options or source type
  * @throws {IoError} File not found or unreadable
@@ -25,7 +26,7 @@ import { createParserRegistry } from "./infrastructure/parsers/registry.js";
  * @example
  * ```ts
  * const result = await extract("curso.zip");
- * const json = toJSON(result);
+ * const json = toJSON(result); // base64 only if includeBytes loaded Uint8Array payloads
  * ```
  */
 export async function extract(

@@ -118,12 +118,12 @@ This library does **not** filter, crop, or drop images by size. It only exposes 
 
 ### Bytes: when filled vs null
 
-`includeBytes` on `extract()` controls whether `bytes` is a `Uint8Array`. Path-only consumers pass `{ images: false, pdfs: false, videos: false }` and use `originalPath` to read the file from the ZIP. `toJSON(..., { omitBytes: true })` drops payloads from JSON without changing `bytesStatus`.
+`includeBytes` on `extract()` controls whether `bytes` is a `Uint8Array` (never a base64 string). Defaults are all `false`: path-only consumers call `extract(zip)` and use `originalPath` to read the file from the ZIP. `toJSON()` encodes loaded `Uint8Array` payloads as `{ encoding: "base64", data }`. `toJSON(..., { omitBytes: true })` drops payloads from JSON without changing `bytesStatus`.
 
 | Call | `images[].bytes` | `pdfs[].bytes` | `videos[].bytes` |
 | --- | --- | --- | --- |
-| `extract(zip)` defaults | filled | filled | `null` (unless `includeBytes.videos: true` and local file) |
-| `extract(zip, { includeBytes: { images: false, pdfs: false, videos: false } })` | `null` (`omitted` if the file exists) | `null` (`omitted` if the file exists) | `null` |
+| `extract(zip)` defaults | `null` (`omitted` if the file exists) | `null` (`omitted` if the file exists) | `null` |
+| `extract(zip, { includeBytes: { images: true, pdfs: true, videos: false } })` | filled (`Uint8Array`) | filled (`Uint8Array`) | `null` (unless `videos: true` and local file) |
 | `toJSON(result, { omitBytes: true })` | omitted in JSON | omitted in JSON | omitted in JSON |
 
 | `bytesStatus` | Meaning |
@@ -133,7 +133,7 @@ This library does **not** filter, crop, or drop images by size. It only exposes 
 | `missing` | File is not in the ZIP |
 | `remote` | Vimeo/YouTube — `bytes` is always `null`; use `url` |
 
-Use default `extract()` (or enable `includeBytes`) when you need binary payloads. Remote videos always have `bytes: null` and a `url`. `width` / `height` / `byteSize` on images do not depend on this table.
+Use `includeBytes` when you need binary payloads. Remote videos always have `bytes: null` and a `url`. `width` / `height` / `byteSize` on images do not depend on this table.
 
 ### JSON transport
 
@@ -212,7 +212,9 @@ Adding a new format = new parser + registry entry; **same** `extract()` and mark
 ## Consumer-side integration
 
 ```ts
-const result = await extract(zipPath);
+const result = await extract(zipPath, {
+  includeBytes: { images: true, pdfs: true },
+});
 
 for (const doc of result.documents) {
   let text = doc.text;

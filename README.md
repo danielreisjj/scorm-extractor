@@ -6,7 +6,7 @@ TypeScript library for Node.js 20+ (ESM). Call `extract()` from your application
 
 | | |
 | --- | --- |
-| Version | `0.3.0` |
+| Version | `0.4.0` |
 | Runtime | Node.js ≥ 20 (ESM) |
 | Format | HoApp, AST OnePage |
 | License | UNLICENSED |
@@ -27,8 +27,10 @@ import { extract, toJSON, ErrorCode, isScormExtractorError } from "scorm-extract
 
 const result = await extract("./course.zip");
 // Path, file: URL, Uint8Array, or Buffer. Wrap ArrayBuffer: new Uint8Array(buf)
+// Default: no media bytes — originalPath + bytesStatus: "omitted"
 
-const json = toJSON(result); // bytes → { encoding: "base64", data }
+const json = toJSON(result);
+// Raw `bytes` is Uint8Array | null. toJSON encodes loaded payloads as { encoding: "base64", data }.
 
 for (const doc of result.documents) {
   // Markers in text align with arrays on the same screen
@@ -40,8 +42,8 @@ for (const doc of result.documents) {
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `includeBytes.images` | `true` | Populate `images[].bytes` |
-| `includeBytes.pdfs` | `true` | Populate `pdfs[].bytes` |
+| `includeBytes.images` | `false` | Populate `images[].bytes` |
+| `includeBytes.pdfs` | `false` | Populate `pdfs[].bytes` |
 | `includeBytes.videos` | `false` | Populate local `videos[].bytes` |
 | `maxUncompressedBytes` | `512 MiB` | Reject packages that exceed the uncompressed ZIP limit |
 
@@ -75,15 +77,13 @@ const forOcr = doc.images.filter((image) => {
 
 ### Media bytes
 
-Assets can be consumed **without** binary payloads (path inside the ZIP) or **with** them (embedded, then base64 in JSON). Metadata is always present: `filename`, `mimeType`, `bytesStatus`, and `originalPath` (path inside the ZIP; `null` on remote videos). Images also have `width`, `height`, and `byteSize` even when bytes are not included.
+Assets can be consumed **without** binary payloads (the default: path inside the ZIP) or **with** them (`Uint8Array` on the result, then base64 only in JSON). Metadata is always present: `filename`, `mimeType`, `bytesStatus`, and `originalPath` (path inside the ZIP; `null` on remote videos). Images also have `width`, `height`, and `byteSize` even when bytes are not included.
 
-**Without bytes.** Skip loading payloads on `extract()`, and skip encoding them in JSON:
+**Without bytes (default).** `extract()` does not load payloads. `bytes` is `null` and `bytesStatus` is `"omitted"` when the file exists:
 
 ```ts
-const result = await extract("./course.zip", {
-  includeBytes: { images: false, pdfs: false, videos: false },
-});
-const json = toJSON(result, { omitBytes: true });
+const result = await extract("./course.zip");
+const json = toJSON(result); // no { encoding: "base64", data }
 
 for (const doc of result.documents) {
   for (const image of doc.images) {
@@ -97,9 +97,18 @@ for (const doc of result.documents) {
 
 `bytesStatus: "omitted"` means the file exists and bytes were not requested — the expected status in this mode. Use `originalPath` to locate the file in the package for OCR, transcription, or anything else.
 
-`includeBytes` controls whether `extract()` fills `bytes`. `omitBytes` only affects `toJSON()`: it drops payloads from JSON and leaves `bytesStatus` unchanged. For path-only work, set `includeBytes` as above; add `omitBytes: true` when serializing.
+`includeBytes` controls whether `extract()` fills `bytes` with a `Uint8Array`. `omitBytes` only affects `toJSON()`: it drops payloads from JSON and leaves `bytesStatus` unchanged. Add `omitBytes: true` when serializing a result that already has bytes.
 
-**With bytes.** Defaults are `images: true`, `pdfs: true`, `videos: false`. Loaded `Uint8Array` values become `{ encoding: "base64", data }` in `toJSON(result)`. Enable `includeBytes.videos` only for local files; Vimeo/YouTube stay `bytes: null` with a `url`.
+**With bytes.** Pass `includeBytes` explicitly. Loaded `bytes` on the result are `Uint8Array`, not a base64 string. `toJSON(result)` is what encodes those payloads as `{ encoding: "base64", data }`.
+
+```ts
+const result = await extract("./course.zip", {
+  includeBytes: { images: true, pdfs: true, videos: false },
+});
+const json = toJSON(result); // Uint8Array → { encoding: "base64", data }
+```
+
+Enable `includeBytes.videos` only for local files; Vimeo/YouTube stay `bytes: null` with a `url`.
 
 | `bytesStatus` | Meaning |
 | --- | --- |

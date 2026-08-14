@@ -36,7 +36,9 @@ function expectSameBytes(
 
 describe("toJSON / fromJSON", () => {
   it("round-trips extract() through JSON.parse(JSON.stringify(toJSON(r)))", async () => {
-    const result = await extract(await miniZip());
+    const result = await extract(await miniZip(), {
+      includeBytes: { images: true, pdfs: true },
+    });
     const restored = fromJSON(JSON.parse(JSON.stringify(toJSON(result))));
 
     expect(restored.format).toBe(result.format);
@@ -106,7 +108,9 @@ describe("toJSON / fromJSON", () => {
   });
 
   it("exports a Zod schema that accepts toJSON() output", async () => {
-    const result = await extract(await miniZip());
+    const result = await extract(await miniZip(), {
+      includeBytes: { images: true },
+    });
     const parsed = extractionResultJSONSchema.parse(toJSON(result));
     expect(parsed.documents[0]?.images[0]?.bytes?.encoding).toBe("base64");
   });

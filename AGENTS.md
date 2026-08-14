@@ -51,4 +51,4 @@ docs/                # human guide + architecture
 
 ## Scope
 
-Converts SCORM packages into linearized screen text and asset references, and stops there. Transcription, OCR, embedding, indexing, and orchestration are the consumer's responsibility and out of scope for this repo. Video bytes stay opt-in (`includeBytes.videos`); course playback stays with the LMS.
+Converts SCORM packages into linearized screen text and asset references, and stops there. Transcription, OCR, embedding, indexing, and orchestration are the consumer's responsibility and out of scope for this repo. Media bytes stay opt-in (`includeBytes`); course playback stays with the LMS.

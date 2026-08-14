@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { extract, EXTRACTION_SCHEMA_VERSION, toJSON } from "../../src/index.js";
+import { extract, EXTRACTION_SCHEMA_VERSION, resolveExtractOptions, toJSON } from "../../src/index.js";
 import { base64ToUint8 } from "../../src/serialize.js";
 import {
   MINI_HOAPP_DATA_JS,
@@ -9,6 +9,14 @@ import {
 } from "../fixtures/mini-hoapp.js";
 
 describe("extract() synthetic HoApp zip", () => {
+  it("defaults includeBytes to false for images, pdfs, and videos", () => {
+    expect(resolveExtractOptions().includeBytes).toEqual({
+      images: false,
+      pdfs: false,
+      videos: false,
+    });
+  });
+
   it("extracts markers from in-memory bytes", async () => {
     const zip = new JSZip();
     zip.file("js/data.js", MINI_HOAPP_DATA_JS);
@@ -30,12 +38,14 @@ describe("extract() synthetic HoApp zip", () => {
     expect(screen?.text).toContain("[PDF_0]");
     expect(screen?.text).toContain("[VIDEO_0]");
     expect(screen?.text.match(/Duplicado/g)).toHaveLength(1);
-    expect(screen?.images[0]?.bytes).toBeInstanceOf(Uint8Array);
+    expect(screen?.images[0]?.bytes).toBeNull();
+    expect(screen?.images[0]?.bytesStatus).toBe("omitted");
     expect(screen?.images[0]?.filename).toBe("foto.png");
     expect(screen?.images[0]?.width).toBe(1);
     expect(screen?.images[0]?.height).toBe(1);
     expect(screen?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
-    expect(screen?.pdfs[0]?.bytes).toBeInstanceOf(Uint8Array);
+    expect(screen?.pdfs[0]?.bytes).toBeNull();
+    expect(screen?.pdfs[0]?.bytesStatus).toBe("omitted");
     expect(screen?.pdfs[0]?.filename).toBe("a.pdf");
     expect(screen?.videos[0]?.source).toBe("vimeo");
     expect(screen?.pdfs[0]?.originalPath).toBe("midias/docs/a.pdf");
@@ -62,6 +72,7 @@ describe("extract() synthetic HoApp zip", () => {
     zip.file("_telas/tela_01.html", "<p></p>");
     const result = await extract(
       await zip.generateAsync({ type: "uint8array" }),
+      { includeBytes: { images: true } },
     );
     const json = toJSON(result);
     const encoded = json.documents[0]?.images[0]?.bytes;

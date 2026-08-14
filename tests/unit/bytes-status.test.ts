@@ -40,6 +40,7 @@ describe("bytesStatus", () => {
         "midias/docs/a.pdf": "%PDF-1.4 mini",
         "_telas/tela_01.html": "<p></p>",
       }),
+      { includeBytes: { images: true, pdfs: true } },
     );
     expect(result.documents[0]?.images[0]?.bytesStatus).toBe("present");
     expect(result.documents[0]?.images[0]?.bytes).toBeInstanceOf(Uint8Array);
@@ -47,7 +48,7 @@ describe("bytesStatus", () => {
     expect(result.documents[0]?.pdfs[0]?.bytes).toBeInstanceOf(Uint8Array);
   });
 
-  it("is omitted when includeBytes is false but the file exists", async () => {
+  it("is omitted by default when the file exists", async () => {
     const result = await extract(
       await zipWith({
         "js/data.js": MINI_HOAPP_DATA_JS,
@@ -55,7 +56,6 @@ describe("bytesStatus", () => {
         "midias/docs/a.pdf": "%PDF-1.4 mini",
         "_telas/tela_01.html": "<p></p>",
       }),
-      { includeBytes: { images: false, pdfs: false, videos: false } },
     );
     expect(result.documents[0]?.images[0]?.bytesStatus).toBe("omitted");
     expect(result.documents[0]?.images[0]?.bytes).toBeNull();
@@ -169,6 +169,7 @@ describe("bytesStatus", () => {
         "midias/docs/a.pdf": "%PDF-1.4 mini",
         "_telas/tela_01.html": "<p></p>",
       }),
+      { includeBytes: { images: true, pdfs: true } },
     );
     const restored = fromJSON(toJSON(result, { omitBytes: true }));
     expect(restored.documents[0]?.images[0]?.bytes).toBeNull();
