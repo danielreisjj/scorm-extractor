@@ -28,7 +28,7 @@ extract(source, options)
 5. Dedupe desktop/tablet/mobile duplicates
 6. Linearize DOM → text + markers
 7. Load bytes per `includeBytes`
-8. Set `kind: "quiz"` when Assessment/Question is present
+8. Set `kind: "quiz"` when Assessment/Question is present and attach structured `quiz` (`choice` from Question/Assessment choices)
 
 Never `eval` / `new Function` package JavaScript.
 
@@ -39,7 +39,7 @@ Never `eval` / `new Function` package JavaScript.
 3. Slice `div#cN` (fallback: top-level `.container`) as screens
 4. Linearize each section (flip-card `.back`, inline popups, native `<video>`)
 5. Load local MP4 under `resources/mN/videos/` as `source: "local"`
-6. If `resources/mN/quiz/quiz-*.json` exists, append a `kind: "quiz"` document
+6. If `resources/mN/quiz/quiz-*.json` exists, append a `kind: "quiz"` document with linearized `text` **and** structured `quiz.questions` (`choice` only; other types → `other` + warning)
 
 PNG text is not OCR'd — content bitmaps stay `[IMAGE_n]` assets.
 

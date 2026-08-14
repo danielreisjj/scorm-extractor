@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nested ZIP envelope detection: if `imsmanifest.xml` is not at the ZIP root, the first-level folder that contains it becomes the content root (detection, parsers, asset paths).
 - AST OnePage parser (`ast-onepage`): screens from `div#cN` in `resources/mN/index.html`, local MP4 references, optional `quiz/*.json` as `kind: "quiz"`.
 - `images[].width`, `images[].height`, and `images[].byteSize` (pixel size from file headers; file length in the ZIP). Filled even when `bytesStatus` is `"omitted"`. The library does not filter or crop.
+- First-class `documents[].quiz` on `kind: "quiz"` screens (`questions[]` with SCORM interaction `type`, `question`, `context`, `responses`, `feedback`). Linearized `text` is unchanged. Only `choice` is structured by parsers; other types emit `type: "other"`.
+- Stable warning prefixes `unsupported_quiz_type` and `quiz_missing_answer_key` (`WarningCode`). Missing answer keys keep every `responses[].correct` as `false` and do not throw.
+
+### Changed
+
+- `schemaVersion` incremented to **2** (additive output: new `quiz` field; nothing removed).
 
 ## [0.2.0] - 2026-08-14
 

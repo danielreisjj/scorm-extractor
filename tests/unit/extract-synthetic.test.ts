@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { extract, toJSON } from "../../src/index.js";
+import { extract, EXTRACTION_SCHEMA_VERSION, toJSON } from "../../src/index.js";
 import { base64ToUint8 } from "../../src/serialize.js";
 import {
   MINI_HOAPP_DATA_JS,
@@ -20,11 +20,12 @@ describe("extract() synthetic HoApp zip", () => {
     const result = await extract(bytes);
 
     expect(result.format).toBe("hoapp");
-    expect(result.schemaVersion).toBe(1);
+    expect(result.schemaVersion).toBe(EXTRACTION_SCHEMA_VERSION);
     expect(result.documents).toHaveLength(1);
     const screen = result.documents[0];
     expect(screen?.kind).toBe("screen");
     expect(screen).not.toHaveProperty("title");
+    expect(screen).not.toHaveProperty("quiz");
     expect(screen?.text).toContain("[IMAGE_0]");
     expect(screen?.text).toContain("[PDF_0]");
     expect(screen?.text).toContain("[VIDEO_0]");
@@ -87,5 +88,17 @@ describe("extract() synthetic HoApp zip", () => {
     expect(doc?.text).toContain("Brasília");
     expect(doc?.text).toContain("(correct)");
     expect(doc?.text).toContain("São Paulo");
+    if (doc?.kind !== "quiz") throw new Error("expected quiz document");
+    expect(doc.quiz.questions).toHaveLength(1);
+    expect(doc.quiz.questions[0]).toMatchObject({
+      type: "choice",
+      question: "Qual é a capital?",
+      context: null,
+      responses: [
+        { text: "São Paulo", correct: false },
+        { text: "Brasília", correct: true },
+        { text: "Rio", correct: false },
+      ],
+    });
   });
 });

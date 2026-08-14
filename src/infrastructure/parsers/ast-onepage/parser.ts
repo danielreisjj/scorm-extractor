@@ -6,6 +6,7 @@ import {
   type ExtractionResult,
   type ImageAsset,
   type PdfAsset,
+  type Quiz,
   type ResolvedExtractOptions,
   type VideoAsset,
 } from "../../../domain/models.js";
@@ -26,7 +27,7 @@ import {
   readRootHtml,
   splitScreens,
 } from "./content.js";
-import { loadQuizzes, quizToHtml } from "./quiz.js";
+import { astQuizToStructured, loadQuizzes, quizToHtml } from "./quiz.js";
 
 export class AstOnepageParser implements PackageParser {
   readonly format = AST_ONEPAGE_FORMAT;
@@ -70,6 +71,8 @@ export class AstOnepageParser implements PackageParser {
     let position = documents.length;
     for (const quiz of quizzes) {
       position += 1;
+      const structured = astQuizToStructured(quiz, quiz.id);
+      warnings.push(...structured.warnings);
       documents.push(
         await documentFromHtml(
           quiz.id,
@@ -80,6 +83,7 @@ export class AstOnepageParser implements PackageParser {
           loader,
           options,
           warnings,
+          structured.quiz,
         ),
       );
     }
@@ -103,19 +107,35 @@ async function documentFromHtml(
   loader: AssetLoader,
   options: ResolvedExtractOptions,
   warnings: string[],
+  quiz?: Quiz,
 ): Promise<ExtractedDocument> {
   const linearized = linearizeHtml(html, {
     videosById: new Map(),
     basePath,
   });
+  const images = await loadImages(linearized, loader, options, warnings, id);
+  const pdfs = await loadPdfs(linearized, loader, options, warnings, id);
+  const videos = await loadVideos(linearized, loader, options, warnings, id);
+  if (kind === "quiz") {
+    return {
+      id,
+      position,
+      kind,
+      text: linearized.text,
+      quiz: quiz ?? { questions: [] },
+      images,
+      pdfs,
+      videos,
+    };
+  }
   return {
     id,
     position,
     kind,
     text: linearized.text,
-    images: await loadImages(linearized, loader, options, warnings, id),
-    pdfs: await loadPdfs(linearized, loader, options, warnings, id),
-    videos: await loadVideos(linearized, loader, options, warnings, id),
+    images,
+    pdfs,
+    videos,
   };
 }
 

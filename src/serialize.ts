@@ -1,6 +1,8 @@
 import { ZodError } from "zod";
 import type {
   EncodedBytes,
+  ExtractedDocument,
+  ExtractedDocumentJSON,
   ExtractionResult,
   ExtractionResultJSON,
   ImageAsset,
@@ -35,15 +37,7 @@ export function toJSON(
     format: result.format,
     warnings: result.warnings,
     course: result.course,
-    documents: result.documents.map((doc) => ({
-      id: doc.id,
-      position: doc.position,
-      kind: doc.kind,
-      text: doc.text,
-      images: doc.images.map((image) => encodeImage(image, omitBytes)),
-      pdfs: doc.pdfs.map((pdf) => encodePdf(pdf, omitBytes)),
-      videos: doc.videos.map((video) => encodeVideo(video, omitBytes)),
-    })),
+    documents: result.documents.map((doc) => encodeDocument(doc, omitBytes)),
   };
 }
 
@@ -70,15 +64,60 @@ export function fromJSON(json: ExtractionResultJSON): ExtractionResult {
     format: parsed.format,
     warnings: parsed.warnings,
     course: parsed.course,
-    documents: parsed.documents.map((doc) => ({
+    documents: parsed.documents.map(decodeDocument),
+  };
+}
+
+function encodeDocument(
+  doc: ExtractedDocument,
+  omitBytes: boolean,
+): ExtractedDocumentJSON {
+  const assets = {
+    images: doc.images.map((image) => encodeImage(image, omitBytes)),
+    pdfs: doc.pdfs.map((pdf) => encodePdf(pdf, omitBytes)),
+    videos: doc.videos.map((video) => encodeVideo(video, omitBytes)),
+  };
+  if (doc.kind === "quiz") {
+    return {
       id: doc.id,
       position: doc.position,
-      kind: doc.kind,
+      kind: "quiz",
       text: doc.text,
-      images: doc.images.map(decodeImage),
-      pdfs: doc.pdfs.map(decodePdf),
-      videos: doc.videos.map(decodeVideo),
-    })),
+      quiz: doc.quiz,
+      ...assets,
+    };
+  }
+  return {
+    id: doc.id,
+    position: doc.position,
+    kind: "screen",
+    text: doc.text,
+    ...assets,
+  };
+}
+
+function decodeDocument(doc: ExtractedDocumentJSON): ExtractedDocument {
+  const assets = {
+    images: doc.images.map(decodeImage),
+    pdfs: doc.pdfs.map(decodePdf),
+    videos: doc.videos.map(decodeVideo),
+  };
+  if (doc.kind === "quiz") {
+    return {
+      id: doc.id,
+      position: doc.position,
+      kind: "quiz",
+      text: doc.text,
+      quiz: doc.quiz,
+      ...assets,
+    };
+  }
+  return {
+    id: doc.id,
+    position: doc.position,
+    kind: "screen",
+    text: doc.text,
+    ...assets,
   };
 }
 

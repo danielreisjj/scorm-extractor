@@ -55,6 +55,7 @@ describe("toJSON / fromJSON", () => {
     expect(copy?.videos[0]?.url).toBe(original?.videos[0]?.url);
     expect(copy?.videos[0]?.source).toBe("vimeo");
     expect(copy?.videos[0]?.bytes).toBeNull();
+    expect(copy).not.toHaveProperty("quiz");
     expect(copy?.images[0]?.width).toBe(original?.images[0]?.width);
     expect(copy?.images[0]?.height).toBe(original?.images[0]?.height);
     expect(copy?.images[0]?.byteSize).toBe(original?.images[0]?.byteSize);

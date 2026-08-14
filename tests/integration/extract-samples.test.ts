@@ -35,6 +35,10 @@ function assertExtractionShape(
   for (const doc of result.documents) {
     expect(["screen", "quiz"]).toContain(doc.kind);
     expect(doc).not.toHaveProperty("title");
+    if (doc.kind === "screen") expect(doc).not.toHaveProperty("quiz");
+    if (doc.kind === "quiz") {
+      expect(doc.quiz.questions).toEqual(expect.any(Array));
+    }
     assertRefsMatchText(doc.text, doc.images, "IMAGE");
     assertRefsMatchText(doc.text, doc.pdfs, "PDF");
     assertRefsMatchText(doc.text, doc.videos, "VIDEO");
@@ -116,6 +120,31 @@ function assertSampleExpectations(name: string, result: ExtractionResult): void 
     const quiz = result.documents.find((doc) => doc.kind === "quiz");
     expect(quiz).toBeTruthy();
     expect(quiz?.text).toContain("QUESTÕES PARA O TERCEIRO TEMPO");
+    if (quiz?.kind !== "quiz") throw new Error("expected quiz document");
+    expect(quiz.quiz.questions.length).toBeGreaterThan(0);
+    expect(quiz.quiz.questions.every((question) => question.type === "choice")).toBe(
+      true,
+    );
+    expect(
+      quiz.quiz.questions.some(
+        (question) =>
+          question.context !== null &&
+          question.context.includes("Miguel") &&
+          question.question.length > 0,
+      ),
+    ).toBe(true);
+    expect(
+      quiz.quiz.questions.every((question) =>
+        question.responses.some((response) => response.correct),
+      ),
+    ).toBe(true);
+    expect(
+      quiz.quiz.questions.some(
+        (question) =>
+          question.feedback?.correct !== null ||
+          question.feedback?.incorrect !== null,
+      ),
+    ).toBe(true);
     expect(
       result.documents.some((doc) =>
         doc.videos.some((video) => video.source === "local"),

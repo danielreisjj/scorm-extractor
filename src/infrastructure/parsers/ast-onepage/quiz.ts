@@ -1,4 +1,17 @@
+import type { Quiz, QuizQuestion, QuizResponse } from "../../../domain/models.js";
 import type { PackageReader } from "../../../domain/ports.js";
+import {
+  applyAnswerKey,
+  buildFeedback,
+  htmlToPlainText,
+  isChoiceAuthoringType,
+  mergeCaseTitle,
+  missingAnswerKeyWarning,
+  normalizeCorrectFlag,
+  quizFromQuestions,
+  splitQuestionAndContext,
+  unsupportedQuizTypeWarning,
+} from "../quiz/choice.js";
 
 const QUIZ_JSON = /(?:^|\/)resources\/m\d+\/quiz\/quiz-[^/]+\.json$/i;
 
@@ -12,7 +25,9 @@ export type AstQuizQuestion = {
   title: string;
   descriptionHtml: string;
   imageUrl: string;
+  authoringType: string;
   options: AstQuizOption[];
+  rightAnswer: string;
   positiveFeedbackTitle: string;
   positiveFeedbackText: string;
   negativeFeedbackTitle: string;
@@ -94,6 +109,72 @@ export function quizToHtml(quiz: AstQuiz): string {
   return parts.join("");
 }
 
+export function astQuizToStructured(
+  quiz: AstQuiz,
+  documentId: string,
+): { quiz: Quiz; warnings: string[] } {
+  const warnings: string[] = [];
+  const questions: QuizQuestion[] = [];
+  let missingKey = false;
+
+  for (const item of quiz.questions) {
+    const { question, warnings: itemWarnings, missingAnswerKey } =
+      structureAstQuestion(item, documentId);
+    questions.push(question);
+    warnings.push(...itemWarnings);
+    if (missingAnswerKey) missingKey = true;
+  }
+
+  if (missingKey) warnings.push(missingAnswerKeyWarning(documentId));
+  return { quiz: quizFromQuestions(questions), warnings };
+}
+
+function structureAstQuestion(
+  item: AstQuizQuestion,
+  documentId: string,
+): { question: QuizQuestion; warnings: string[]; missingAnswerKey: boolean } {
+  const split = splitQuestionAndContext(item.descriptionHtml);
+  const questionText = split.question || htmlToPlainText(item.title);
+  const context = mergeCaseTitle(item.title, split.context, questionText);
+  const feedback = buildFeedback({
+    correctTitle: item.positiveFeedbackTitle,
+    correctText: item.positiveFeedbackText,
+    incorrectTitle: item.negativeFeedbackTitle,
+    incorrectText: item.negativeFeedbackText,
+  });
+  const rawResponses: QuizResponse[] = item.options.map((option) => ({
+    text: htmlToPlainText(option.label) || option.label,
+    correct: option.correct,
+  }));
+
+  if (!isChoiceAuthoringType(item.authoringType)) {
+    return {
+      question: {
+        type: "other",
+        question: questionText,
+        context,
+        responses: rawResponses,
+        feedback,
+      },
+      warnings: [unsupportedQuizTypeWarning(documentId, item.authoringType)],
+      missingAnswerKey: false,
+    };
+  }
+
+  const keyed = applyAnswerKey(rawResponses, item.rightAnswer);
+  return {
+    question: {
+      type: "choice",
+      question: questionText,
+      context,
+      responses: keyed.responses,
+      feedback,
+    },
+    warnings: [],
+    missingAnswerKey: !keyed.hasKey,
+  };
+}
+
 function parseQuizJson(path: string, raw: string): AstQuiz | null {
   const data = JSON.parse(raw) as unknown;
   if (!data || typeof data !== "object" || Array.isArray(data)) return null;
@@ -123,10 +204,15 @@ function parseQuestion(rec: Record<string, unknown>): AstQuizQuestion | null {
     const option = asRecord(item);
     const label = asString(option.label) || asString(option.text);
     const value = asString(option.value);
+    const flagged =
+      normalizeCorrectFlag(option.correct) ??
+      normalizeCorrectFlag(option.status) ??
+      normalizeCorrectFlag(option.evaluate);
     return {
       label,
       value,
-      correct: value !== "" && value === rightAnswer,
+      correct:
+        flagged === true || (value !== "" && value === rightAnswer),
     };
   }).filter((option) => option.label.length > 0);
 
@@ -136,7 +222,9 @@ function parseQuestion(rec: Record<string, unknown>): AstQuizQuestion | null {
     title,
     descriptionHtml,
     imageUrl: asString(rec.image_url),
+    authoringType: asString(rec.type),
     options,
+    rightAnswer,
     positiveFeedbackTitle: asString(rec.positive_feedback_title),
     positiveFeedbackText: asString(rec.positive_feedback_text),
     negativeFeedbackTitle: asString(rec.negative_feedback_title),

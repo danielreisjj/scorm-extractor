@@ -34,6 +34,7 @@ import {
   type HoappIR,
   type HoappSection,
 } from "./ir.js";
+import { quizFromHoappComponents } from "./quiz.js";
 import * as cheerio from "cheerio";
 
 const DATA_JS = "js/data.js";
@@ -158,6 +159,21 @@ async function screenFromSection(
     } else {
       videos.push({ ...video, bytes: null, bytesStatus: "missing" });
     }
+  }
+
+  if (kind === "quiz") {
+    const structured = quizFromHoappComponents(section.id, sectionComponents);
+    warnings.push(...structured.warnings);
+    return {
+      id: section.id,
+      position: section.position,
+      kind,
+      text: linearized.text,
+      quiz: structured.quiz,
+      images,
+      pdfs,
+      videos,
+    };
   }
 
   return {

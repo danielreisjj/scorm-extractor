@@ -101,6 +101,7 @@ describe("extract() synthetic AST OnePage zip", () => {
     expect(result.documents.map((doc) => doc.id)).toEqual(["c1", "c2"]);
     expect(result.documents.every((doc) => doc.kind === "screen")).toBe(true);
     expect(result.documents[0]).not.toHaveProperty("title");
+    expect(result.documents[0]).not.toHaveProperty("quiz");
 
     const intro = result.documents[0];
     expect(intro?.text).toContain("Introdução");
@@ -154,6 +155,23 @@ describe("extract() synthetic AST OnePage zip", () => {
     expect(quiz?.text).toContain("São Paulo");
     expect(quiz?.text).toContain("Resposta correta.");
     expect(quiz?.text).toContain("Tente de novo.");
+    expect(quiz?.text).toContain("[IMAGE_0]");
+    expect(quiz?.images.length).toBeGreaterThan(0);
+    if (quiz?.kind !== "quiz") throw new Error("expected quiz document");
+    expect(quiz.quiz.questions).toHaveLength(1);
+    expect(quiz.quiz.questions[0]).toMatchObject({
+      type: "choice",
+      question: "Qual é a capital?",
+      context: null,
+      responses: [
+        { text: "A) São Paulo", correct: false },
+        { text: "B) Brasília", correct: true },
+      ],
+      feedback: {
+        correct: "Parabéns — Resposta correta.",
+        incorrect: "Ops — Tente de novo.",
+      },
+    });
   });
 
   it("ignores a missing quiz without error", async () => {

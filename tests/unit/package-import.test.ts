@@ -4,11 +4,14 @@ import {
   extract,
   InvalidPackageError,
   UnsupportedPackageFormatError,
+  WarningCode,
 } from "../../src/index.js";
 
 describe("package public API", () => {
   it("exports extract()", () => {
     expect(typeof extract).toBe("function");
+    expect(WarningCode.UNSUPPORTED_QUIZ_TYPE).toBe("unsupported_quiz_type");
+    expect(WarningCode.QUIZ_MISSING_ANSWER_KEY).toBe("quiz_missing_answer_key");
   });
 
   it("rejects a corrupt zip", async () => {

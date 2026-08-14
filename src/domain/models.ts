@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const DEFAULT_MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024;
 
-/** Output contract version. Increment when the ExtractionResult shape breaks. */
-export const EXTRACTION_SCHEMA_VERSION = 1;
+/** Output contract version. Increment when the ExtractionResult shape changes. */
+export const EXTRACTION_SCHEMA_VERSION = 2;
 
 export const includeBytesSchema = z
   .object({
@@ -136,26 +136,104 @@ export const videoAssetJSONSchema = z.object({
   bytes: encodedBytesSchema.nullable(),
 });
 
-const documentFields = {
+/**
+ * SCORM CMI interaction types (IEEE 1484.11.1 / SCORM 2004).
+ * Only `"choice"` is structured by parsers today; unrecognized items use `"other"`.
+ */
+export const QUIZ_INTERACTION_TYPES = [
+  "choice",
+  "true-false",
+  "fill-in",
+  "long-fill-in",
+  "matching",
+  "sequencing",
+  "likert",
+  "numeric",
+  "other",
+] as const;
+
+export const quizInteractionTypeSchema = z.enum(QUIZ_INTERACTION_TYPES);
+
+export const quizResponseSchema = z.object({
+  text: z.string(),
+  /**
+   * Identified correct option. `false` also covers “no answer key found”
+   * (see `quiz_missing_answer_key`); never `null`.
+   */
+  correct: z.boolean(),
+});
+
+export const quizFeedbackSchema = z.object({
+  correct: z.string().nullable(),
+  incorrect: z.string().nullable(),
+});
+
+export const quizQuestionSchema = z.object({
+  type: quizInteractionTypeSchema,
+  question: z.string(),
+  context: z.string().nullable(),
+  responses: z.array(quizResponseSchema),
+  feedback: quizFeedbackSchema.nullable(),
+});
+
+export const quizSchema = z.object({
+  questions: z.array(quizQuestionSchema),
+});
+
+const documentBaseFields = {
   id: z.string(),
   position: z.number(),
-  kind: documentKindSchema,
   text: z.string(),
 };
 
-export const documentSchema = z.object({
-  ...documentFields,
+const screenDocumentFields = {
+  ...documentBaseFields,
+  kind: z.literal("screen"),
+};
+
+const quizDocumentFields = {
+  ...documentBaseFields,
+  kind: z.literal("quiz"),
+  quiz: quizSchema,
+};
+
+export const screenDocumentSchema = z.object({
+  ...screenDocumentFields,
   images: z.array(imageAssetSchema),
   pdfs: z.array(pdfAssetSchema),
   videos: z.array(videoAssetSchema),
 });
 
-export const extractedDocumentJSONSchema = z.object({
-  ...documentFields,
+export const quizDocumentSchema = z.object({
+  ...quizDocumentFields,
+  images: z.array(imageAssetSchema),
+  pdfs: z.array(pdfAssetSchema),
+  videos: z.array(videoAssetSchema),
+});
+
+export const documentSchema = z.discriminatedUnion("kind", [
+  screenDocumentSchema,
+  quizDocumentSchema,
+]);
+
+export const screenDocumentJSONSchema = z.object({
+  ...screenDocumentFields,
   images: z.array(imageAssetJSONSchema),
   pdfs: z.array(pdfAssetJSONSchema),
   videos: z.array(videoAssetJSONSchema),
 });
+
+export const quizDocumentJSONSchema = z.object({
+  ...quizDocumentFields,
+  images: z.array(imageAssetJSONSchema),
+  pdfs: z.array(pdfAssetJSONSchema),
+  videos: z.array(videoAssetJSONSchema),
+});
+
+export const extractedDocumentJSONSchema = z.discriminatedUnion("kind", [
+  screenDocumentJSONSchema,
+  quizDocumentJSONSchema,
+]);
 
 const extractionResultFields = {
   schemaVersion: z.number().int().positive(),
@@ -180,6 +258,11 @@ export type BytesStatus = z.infer<typeof bytesStatusSchema>;
 export type ImageAsset = z.infer<typeof imageAssetSchema>;
 export type PdfAsset = z.infer<typeof pdfAssetSchema>;
 export type VideoAsset = z.infer<typeof videoAssetSchema>;
+export type QuizInteractionType = z.infer<typeof quizInteractionTypeSchema>;
+export type QuizResponse = z.infer<typeof quizResponseSchema>;
+export type QuizFeedback = z.infer<typeof quizFeedbackSchema>;
+export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
+export type Quiz = z.infer<typeof quizSchema>;
 export type ExtractedDocument = z.infer<typeof documentSchema>;
 export type ExtractionResult = z.infer<typeof extractionResultSchema>;
 export type EncodedBytes = z.infer<typeof encodedBytesSchema>;

@@ -45,7 +45,7 @@ docs/                # human guide + architecture
 - Marker/`ref` invariant: every `[IMAGE_n]`, `[PDF_n]`, `[VIDEO_n]` in `text` has a matching `ref` in that screen’s arrays, and vice versa.
 - Keep UI / pedagogical copy in `text`. Omit player chrome **files** only (`midias/interface/`, `resources/interface/`, `bg/`, fonts, logos) — do not strip phrases from text.
 - Assets: `bytes: Uint8Array | null`. JSON transport via `toJSON` only.
-- `kind`: `"screen" | "quiz"`. No `documents[].title`. No `images[].role`.
+- `kind`: `"screen" | "quiz"`. Quiz documents include structured `quiz`; screens must not. No `documents[].title`. No `images[].role`.
 - Errors must be `ScormExtractorError` subclasses with stable `ErrorCode`.
 - Never log base64 or dump `scorms/` (client material); never commit `.cursor/`, `private/`, or client ZIPs.
 

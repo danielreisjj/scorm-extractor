@@ -17,7 +17,7 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
 
 ```ts
 {
-  schemaVersion: 1,
+  schemaVersion: 2,
   format: "hoapp" | "ast-onepage" | string,
   warnings: string[],
   course: { title, code, language },
@@ -26,6 +26,16 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
     position: 8,
     kind: "screen" | "quiz",
     text: "…\n\n[PDF_0]\n\n…",
+    quiz?: {                    // only when kind === "quiz"
+      questions: [{
+        type: "choice" | "true-false" | "fill-in" | "long-fill-in"
+            | "matching" | "sequencing" | "likert" | "numeric" | "other",
+        question: string,       // prompt (SCORM "description")
+        context: string | null, // preceding story/case, when present
+        responses: [{ text: string, correct: boolean }],
+        feedback: { correct: string | null, incorrect: string | null } | null,
+      }],
+    },
     images: [{ ref, mimeType, originalPath, filename, alt, width, height, byteSize, bytes, bytesStatus }],
     pdfs:   [{ ref, mimeType, originalPath, filename, bytes, bytesStatus }],
     videos: [{ ref, source, mimeType, originalPath, filename, url, title, bytes, bytesStatus }],
@@ -33,7 +43,7 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
 }
 ```
 
-`schemaVersion` versions this output contract (not the npm package semver). Breaking changes to the result shape increment it.
+`schemaVersion` versions this output contract (not the npm package semver). It increments when the result shape changes (including additive fields).
 
 ### Markers (per screen)
 
@@ -55,8 +65,45 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
 | `videos[].source` | `vimeo` \| `youtube` \| `local` |
 | `videos[].mimeType` | Local file MIME (e.g. `video/mp4`); `null` when remote |
 | `kind` | `quiz` if Assessment/Question (HoApp) or `quiz/*.json` (AST OnePage) is present; else `screen` |
+| `quiz` | Structured questions. **Present only when `kind === "quiz"`.** `text` stays linearized for consumers that do not need structure. |
 
 Intentionally omitted: `documents[].title` (already in `text`), `images[].role` (chrome files are filtered out).
+
+### Quiz (`documents[].quiz`)
+
+`quiz` is additive. Do not split `text` on delimiters to recover questions — iterate `doc.quiz.questions`.
+
+`type` uses the SCORM CMI interaction vocabulary (`choice`, `true-false`, `fill-in`, `long-fill-in`, `matching`, `sequencing`, `likert`, `numeric`, `other`). The schema accepts every value. Parsers only **structure** `choice` (multiple choice) today, which is the type present in available packages (AST OnePage `quiz-*.json` / HoApp Question choices). Any other authoring type is emitted as `type: "other"` with as much raw `question` / `context` / `responses` text as can be recovered, plus `unsupported_quiz_type`.
+
+Answer keys from authoring tools (`correct`/`incorrect`, `1`/`0`, `right_answer` vs option `value`, …) are normalized to `responses[].correct: boolean`. When no key is identifiable, questions are still extracted, every `correct` is `false`, and `quiz_missing_answer_key` is emitted. Missing keys are not errors.
+
+Image markers on a quiz screen (`[IMAGE_n]` + `images[]`) are unchanged; `quiz` does not replace them.
+
+```ts
+import { extract, WarningCode } from "scorm-extractor";
+
+const result = await extract(zipPath);
+
+for (const warning of result.warnings) {
+  if (warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)) {
+    // question fell through to type: "other" — do not treat it as structured choice
+  }
+  if (warning.startsWith(WarningCode.QUIZ_MISSING_ANSWER_KEY)) {
+    // responses.correct is false for every option; do not score from this quiz
+  }
+}
+
+for (const doc of result.documents) {
+  if (doc.kind !== "quiz") continue;
+  for (const q of doc.quiz.questions) {
+    const answers = q.responses
+      .map((r) => `${r.correct ? "[correct] " : ""}${r.text}`)
+      .join("\n");
+    const chunk = [q.context, q.question, answers].filter(Boolean).join("\n\n");
+    await upsertChunks(chunk, { screenId: doc.id, kind: doc.kind });
+  }
+}
+```
 
 ### Image metadata (no filtering)
 
@@ -121,6 +168,8 @@ Soft issues go to `result.warnings[]`. Extraction **continues**. Known warnings 
 | `Missing image '…' in tela_X` | Marker references a path not present in the ZIP; `bytes` stays `null`. |
 | `Missing PDF '…' in tela_X` | Same for PDF. |
 | `Could not read image dimensions for '…' in tela_X` | File exists but PNG/JPEG/GIF/WebP header could not be parsed; `width`/`height` stay `null`. |
+| `unsupported_quiz_type: …` | A question was not recognized as `choice` and was emitted as `type: "other"`. Message includes the authoring type when known and the `documentId`. Match with `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`. |
+| `quiz_missing_answer_key: …` | A quiz had no identifiable answer key. Questions are still present; every `responses[].correct` is `false`. Match with `warning.startsWith(WarningCode.QUIZ_MISSING_ANSWER_KEY)`. |
 
 ```ts
 import { extract, ErrorCode, isScormExtractorError } from "scorm-extractor";

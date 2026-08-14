@@ -56,9 +56,15 @@ export {
   imageAssetSchema,
   pdfAssetSchema,
   videoAssetSchema,
+  quizSchema,
+  quizQuestionSchema,
+  quizResponseSchema,
+  quizFeedbackSchema,
+  quizInteractionTypeSchema,
   resolveExtractOptions,
   DEFAULT_MAX_UNCOMPRESSED_BYTES,
   EXTRACTION_SCHEMA_VERSION,
+  QUIZ_INTERACTION_TYPES,
   type ExtractOptions,
   type ResolvedExtractOptions,
   type ExtractionResult,
@@ -70,9 +76,20 @@ export {
   type ImageAsset,
   type PdfAsset,
   type VideoAsset,
+  type Quiz,
+  type QuizQuestion,
+  type QuizResponse,
+  type QuizFeedback,
+  type QuizInteractionType,
   type ToJsonOptions,
   type EncodedBytes,
 } from "./domain/models.js";
+
+export {
+  WarningCode,
+  formatWarning,
+  type WarningCodeValue,
+} from "./domain/warning-codes.js";
 
 export {
   ErrorCode,
