@@ -9,6 +9,8 @@ describe("classifyAsset", () => {
   it("treats player chrome as chrome", () => {
     expect(classifyAsset("midias/interface/marca.svg")).toBe("chrome");
     expect(classifyAsset("midias/bg/fundo.jpg")).toBe("chrome");
+    expect(classifyAsset("resources/interface/nav.png")).toBe("chrome");
+    expect(classifyAsset("resources/m1/bg/bg_c1.jpg")).toBe("chrome");
     expect(classifyAsset("midias/imagens/vazio_300.png")).toBe("chrome");
     expect(classifyAsset("midias/imagens/logo_cob-cor.png")).toBe("chrome");
     expect(classifyAsset("css/fonts/icon.woff")).toBe("chrome");

@@ -18,16 +18,20 @@ describe("extract() sample ZIPs", () => {
           includeBytes: sample.includeBytes,
         });
         await writeExtractionOutput(sample.name, result);
-        assertExtractionShape(result);
+        assertExtractionShape(result, sample.name);
         assertSampleExpectations(sample.name, result);
       },
     );
   }
 });
 
-function assertExtractionShape(result: ExtractionResult): void {
+function assertExtractionShape(
+  result: ExtractionResult,
+  name: string,
+): void {
   expect(result.format).toBeTruthy();
-  expect(result.documents.length).toBeGreaterThanOrEqual(8);
+  const minScreens = name === "biologicas-anatomia-no-esporte" ? 7 : 8;
+  expect(result.documents.length).toBeGreaterThanOrEqual(minScreens);
   for (const doc of result.documents) {
     expect(["screen", "quiz"]).toContain(doc.kind);
     expect(doc).not.toHaveProperty("title");
@@ -35,6 +39,7 @@ function assertExtractionShape(result: ExtractionResult): void {
     assertRefsMatchText(doc.text, doc.pdfs, "PDF");
     assertRefsMatchText(doc.text, doc.videos, "VIDEO");
   }
+  assertImageMetaFilled(result);
 }
 
 function assertSampleExpectations(name: string, result: ExtractionResult): void {
@@ -75,6 +80,48 @@ function assertSampleExpectations(name: string, result: ExtractionResult): void 
     expect(
       result.warnings.some((warning) => warning.includes("leftover template")),
     ).toBe(true);
+    return;
+  }
+
+  if (name === "biologicas-anatomia-no-esporte") {
+    expect(result.format).toBe("hoapp");
+    expect(allText(result)).toContain("Anatomia");
+    return;
+  }
+
+  if (name === "COB_0666_11_Prevencao_e_Enfrentamento_do_Assedio_M01-scorm") {
+    expect(result.format).toBe("ast-onepage");
+    expect(result.documents.some((doc) => doc.id === "c1")).toBe(true);
+    expect(
+      result.documents.some((doc) =>
+        doc.videos.some(
+          (video) =>
+            video.source === "local" &&
+            video.mimeType === "video/mp4" &&
+            (video.originalPath ?? "").includes("resources/m1/videos/"),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      result.documents.some((doc) =>
+        doc.images.some((image) => image.originalPath.includes("c13-popup.png")),
+      ),
+    ).toBe(true);
+    assertNoChromeImages(result);
+    return;
+  }
+
+  if (name === "M3") {
+    expect(result.format).toBe("ast-onepage");
+    const quiz = result.documents.find((doc) => doc.kind === "quiz");
+    expect(quiz).toBeTruthy();
+    expect(quiz?.text).toContain("QUESTÕES PARA O TERCEIRO TEMPO");
+    expect(
+      result.documents.some((doc) =>
+        doc.videos.some((video) => video.source === "local"),
+      ),
+    ).toBe(true);
+    assertNoChromeImages(result);
   }
 }
 
@@ -96,8 +143,27 @@ function assertNoChromeImages(result: ExtractionResult): void {
       const path = image.originalPath.toLowerCase();
       expect(path).not.toContain("midias/interface/");
       expect(path).not.toContain("midias/bg/");
+      expect(path).not.toContain("resources/interface/");
+      expect(path).not.toMatch(/(?:^|\/)bg\//);
       expect(path).not.toMatch(/(?:^|\/)(?:logo|marca|vazio)[-_.]/);
       expect(image).not.toHaveProperty("role");
+    }
+  }
+}
+
+function assertImageMetaFilled(result: ExtractionResult): void {
+  const images = result.documents
+    .flatMap((doc) => doc.images)
+    .filter((image) => image.bytesStatus !== "missing");
+  expect(images.length).toBeGreaterThan(0);
+  for (const image of images) {
+    expect(image.byteSize).toEqual(expect.any(Number));
+    expect(image.byteSize).toBeGreaterThan(0);
+    if (/\.(?:png|jpe?g|gif|webp)$/i.test(image.filename)) {
+      expect(image.width).toEqual(expect.any(Number));
+      expect(image.height).toEqual(expect.any(Number));
+      expect(image.width).toBeGreaterThan(0);
+      expect(image.height).toBeGreaterThan(0);
     }
   }
 }

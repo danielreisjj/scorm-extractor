@@ -59,6 +59,9 @@ describe("bytesStatus", () => {
     );
     expect(result.documents[0]?.images[0]?.bytesStatus).toBe("omitted");
     expect(result.documents[0]?.images[0]?.bytes).toBeNull();
+    expect(result.documents[0]?.images[0]?.width).toBe(1);
+    expect(result.documents[0]?.images[0]?.height).toBe(1);
+    expect(result.documents[0]?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
     expect(result.documents[0]?.pdfs[0]?.bytesStatus).toBe("omitted");
     expect(result.documents[0]?.pdfs[0]?.bytes).toBeNull();
     expect(result.warnings.some((w) => w.startsWith("Missing"))).toBe(false);
@@ -73,9 +76,37 @@ describe("bytesStatus", () => {
     );
     expect(result.documents[0]?.images[0]?.bytesStatus).toBe("missing");
     expect(result.documents[0]?.images[0]?.bytes).toBeNull();
+    expect(result.documents[0]?.images[0]?.width).toBeNull();
+    expect(result.documents[0]?.images[0]?.height).toBeNull();
+    expect(result.documents[0]?.images[0]?.byteSize).toBeNull();
     expect(result.documents[0]?.pdfs[0]?.bytesStatus).toBe("missing");
     expect(result.warnings.some((w) => w.includes("Missing image"))).toBe(true);
     expect(result.warnings.some((w) => w.includes("Missing PDF"))).toBe(true);
+  });
+
+  it("fills image width/height/byteSize when the raster header cannot be parsed", async () => {
+    const truncatedPng = Uint8Array.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ]);
+    const result = await extract(
+      await zipWith({
+        "js/data.js": MINI_HOAPP_DATA_JS,
+        "midias/imagens/foto.png": truncatedPng,
+        "midias/docs/a.pdf": "%PDF-1.4 mini",
+        "_telas/tela_01.html": "<p></p>",
+      }),
+      { includeBytes: { images: false, pdfs: false } },
+    );
+    const image = result.documents[0]?.images[0];
+    expect(image?.bytesStatus).toBe("omitted");
+    expect(image?.byteSize).toBe(truncatedPng.byteLength);
+    expect(image?.width).toBeNull();
+    expect(image?.height).toBeNull();
+    expect(
+      result.warnings.some((warning) =>
+        warning.includes("Could not read image dimensions"),
+      ),
+    ).toBe(true);
   });
 
   it("is remote for Vimeo/YouTube regardless of includeBytes.videos", async () => {

@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Nested ZIP envelope detection: if `imsmanifest.xml` is not at the ZIP root, the first-level folder that contains it becomes the content root (detection, parsers, asset paths).
+- AST OnePage parser (`ast-onepage`): screens from `div#cN` in `resources/mN/index.html`, local MP4 references, optional `quiz/*.json` as `kind: "quiz"`.
+- `images[].width`, `images[].height`, and `images[].byteSize` (pixel size from file headers; file length in the ZIP). Filled even when `bytesStatus` is `"omitted"`. The library does not filter or crop.
+
 ## [0.2.0] - 2026-08-14
 
 ### Breaking

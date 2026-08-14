@@ -7,8 +7,10 @@ import { createParserRegistry } from "./infrastructure/parsers/registry.js";
 /**
  * Extract linearized screen text and media references from a SCORM package.
  *
- * Currently supports HoApp (`js/data.js` / `as-course`). Other authoring tools
- * throw {@link UnsupportedPackageFormatError} with a `detectedFormat` hint.
+ * Currently supports HoApp (`js/data.js` / `as-course`) and AST OnePage
+ * (`scripts/js/ast_onepage_actions.js` + `resources/mN/index.html`).
+ * Other authoring tools throw {@link UnsupportedPackageFormatError} with a
+ * `detectedFormat` hint.
  *
  * @param source - File path, `file:` URL, `Uint8Array`, or `Buffer`
  * @param options - Byte inclusion and ZIP size limits

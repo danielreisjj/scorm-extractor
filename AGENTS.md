@@ -9,7 +9,7 @@ npm library. Agents: follow this file. Humans: see `README.md` and `docs/`.
 | API | `extract(source, options?)` → `ExtractionResult`; `toJSON(result)` |
 | Errors | `ScormExtractorError` + stable `ErrorCode` |
 
-Supported format today: **HoApp**. New formats = new parser + registry entry. Do **not** change `extract()` or the output shape.
+Supported format today: **HoApp** and **AST OnePage**. New formats = new parser + registry entry. Do **not** change `extract()` or the output shape.
 
 ## Commands
 
@@ -43,7 +43,7 @@ docs/                # human guide + architecture
 - Protect ZIP reads (zip-slip, zip bombs).
 - Parse package JS as data (regex / balanced literals / `JSON.parse`). Never `eval` or `new Function`.
 - Marker/`ref` invariant: every `[IMAGE_n]`, `[PDF_n]`, `[VIDEO_n]` in `text` has a matching `ref` in that screen’s arrays, and vice versa.
-- Keep UI / pedagogical copy in `text`. Omit player chrome **files** only (`midias/interface/`, `bg/`, fonts, logos) — do not strip phrases from text.
+- Keep UI / pedagogical copy in `text`. Omit player chrome **files** only (`midias/interface/`, `resources/interface/`, `bg/`, fonts, logos) — do not strip phrases from text.
 - Assets: `bytes: Uint8Array | null`. JSON transport via `toJSON` only.
 - `kind`: `"screen" | "quiz"`. No `documents[].title`. No `images[].role`.
 - Errors must be `ScormExtractorError` subclasses with stable `ErrorCode`.

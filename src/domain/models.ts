@@ -79,6 +79,9 @@ const imageAssetFields = {
   originalPath: z.string(),
   filename: z.string(),
   alt: z.string(),
+  width: z.number().int().nonnegative().nullable(),
+  height: z.number().int().nonnegative().nullable(),
+  byteSize: z.number().int().nonnegative().nullable(),
   bytesStatus: bytesStatusSchema,
 };
 

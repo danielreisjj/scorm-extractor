@@ -89,6 +89,9 @@ function encodeImage(image: ImageAsset, omitBytes: boolean): ImageAssetJSON {
     originalPath: image.originalPath,
     filename: image.filename,
     alt: image.alt,
+    width: image.width,
+    height: image.height,
+    byteSize: image.byteSize,
     bytesStatus: image.bytesStatus,
     bytes: omitBytes ? null : encodeBytes(image.bytes),
   };

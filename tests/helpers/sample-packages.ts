@@ -40,6 +40,21 @@ export const SAMPLE_PACKAGES: SamplePackage[] = [
     file: "Novo_CIEVO_M03.zip",
     includeBytes: { images: false, pdfs: false, videos: false },
   },
+  {
+    name: "biologicas-anatomia-no-esporte",
+    file: "biologicas-anatomia-no-esporte.zip",
+    includeBytes: { images: false, pdfs: false, videos: false },
+  },
+  {
+    name: "COB_0666_11_Prevencao_e_Enfrentamento_do_Assedio_M01-scorm",
+    file: "COB_0666_11_Prevencao_e_Enfrentamento_do_Assedio_M01-scorm.zip",
+    includeBytes: { images: false, pdfs: false, videos: false },
+  },
+  {
+    name: "M3",
+    file: "M3.zip",
+    includeBytes: { images: false, pdfs: false, videos: false },
+  },
 ];
 
 export function samplePath(file: string): string {

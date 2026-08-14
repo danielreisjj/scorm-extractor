@@ -77,4 +77,49 @@ describe("linearizeHtml", () => {
     expect(result.images).toEqual([]);
     expect(result.text).not.toContain("[IMAGE_0]");
   });
+
+  it("emits a local VIDEO marker from a native video/source tag", () => {
+    const html = `
+      <p>Assista</p>
+      <video>
+        <source src="./videos/aula.mp4" type="video/mp4" />
+      </video>
+    `;
+    const result = linearizeHtml(html, {
+      videosById: new Map(),
+      basePath: "resources/m1",
+    });
+    expect(result.text).toContain("[VIDEO_0]");
+    expect(result.videos[0]).toMatchObject({
+      ref: "VIDEO_0",
+      source: "local",
+      mimeType: "video/mp4",
+      originalPath: "resources/m1/videos/aula.mp4",
+    });
+  });
+
+  it("skips empty video sources used as popup templates", () => {
+    const html = `<video><source src="" type="video/mp4" /></video>`;
+    const result = linearizeHtml(html, { videosById: new Map() });
+    expect(result.videos).toEqual([]);
+    expect(result.text).not.toContain("[VIDEO_0]");
+  });
+
+  it("resolves relative image paths against basePath", () => {
+    const html = `<img src="./images/foto.png" alt="foto">`;
+    const result = linearizeHtml(html, {
+      videosById: new Map(),
+      basePath: "resources/m1",
+    });
+    expect(result.images[0]?.originalPath).toBe("resources/m1/images/foto.png");
+  });
+
+  it("trims whitespace in asset src paths", () => {
+    const html = `<img src=" ./images/foto.png" alt="foto">`;
+    const result = linearizeHtml(html, {
+      videosById: new Map(),
+      basePath: "resources/m1",
+    });
+    expect(result.images[0]?.originalPath).toBe("resources/m1/images/foto.png");
+  });
 });

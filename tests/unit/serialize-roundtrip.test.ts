@@ -55,6 +55,11 @@ describe("toJSON / fromJSON", () => {
     expect(copy?.videos[0]?.url).toBe(original?.videos[0]?.url);
     expect(copy?.videos[0]?.source).toBe("vimeo");
     expect(copy?.videos[0]?.bytes).toBeNull();
+    expect(copy?.images[0]?.width).toBe(original?.images[0]?.width);
+    expect(copy?.images[0]?.height).toBe(original?.images[0]?.height);
+    expect(copy?.images[0]?.byteSize).toBe(original?.images[0]?.byteSize);
+    expect(copy?.images[0]?.width).toBe(1);
+    expect(copy?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
   });
 
   it("omitBytes: true round-trips with all bytes null", async () => {
@@ -66,6 +71,9 @@ describe("toJSON / fromJSON", () => {
     expect(restored.documents[0]?.pdfs[0]?.bytes).toBeNull();
     expect(restored.documents[0]?.videos[0]?.bytes).toBeNull();
     expect(restored.documents[0]?.images[0]?.filename).toBe("foto.png");
+    expect(restored.documents[0]?.images[0]?.width).toBe(1);
+    expect(restored.documents[0]?.images[0]?.height).toBe(1);
+    expect(restored.documents[0]?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
     expect(restored.documents[0]?.videos[0]?.url).toBe(
       "https://player.vimeo.com/video/1",
     );

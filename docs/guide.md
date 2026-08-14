@@ -18,7 +18,7 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
 ```ts
 {
   schemaVersion: 1,
-  format: "hoapp",
+  format: "hoapp" | "ast-onepage" | string,
   warnings: string[],
   course: { title, code, language },
   documents: [{
@@ -26,7 +26,7 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
     position: 8,
     kind: "screen" | "quiz",
     text: "…\n\n[PDF_0]\n\n…",
-    images: [{ ref, mimeType, originalPath, filename, alt, bytes, bytesStatus }],
+    images: [{ ref, mimeType, originalPath, filename, alt, width, height, byteSize, bytes, bytesStatus }],
     pdfs:   [{ ref, mimeType, originalPath, filename, bytes, bytesStatus }],
     videos: [{ ref, source, mimeType, originalPath, filename, url, title, bytes, bytesStatus }],
   }]
@@ -47,19 +47,27 @@ OCR, transcription, quiz scoring, and playback stay with the consumer.
 | --- | --- |
 | `originalPath` | Path **inside the ZIP**, never a public URL |
 | `filename` | Basename |
+| `images[].width` / `height` | Pixel size from the file header (`null` if unread) |
+| `images[].byteSize` | File size in the ZIP in bytes (`null` if the file is missing). Independent of `bytes` / `includeBytes` |
 | `bytes` | `Uint8Array \| null` according to `includeBytes` |
 | `bytesStatus` | `present` \| `omitted` \| `missing` \| `remote` — why `bytes` is filled or null |
 | `images[].alt` | HTML `alt` (often empty) |
 | `videos[].source` | `vimeo` \| `youtube` \| `local` |
 | `videos[].mimeType` | Local file MIME (e.g. `video/mp4`); `null` when remote |
-| `kind` | `quiz` if Assessment/Question present; else `screen` |
+| `kind` | `quiz` if Assessment/Question (HoApp) or `quiz/*.json` (AST OnePage) is present; else `screen` |
 
 Intentionally omitted: `documents[].title` (already in `text`), `images[].role` (chrome files are filtered out).
+
+### Image metadata (no filtering)
+
+Every `images[]` entry includes `filename`, `width`, `height`, and `byteSize`. Pixel size is read from PNG/JPEG/GIF/WebP headers while parsing the ZIP; `byteSize` is the file length inside the package (not the base64 payload). These fields are filled even when `bytesStatus` is `"omitted"` (`includeBytes.images: false` / `extract:all`).
+
+This library does **not** filter, crop, or drop images by size. It only exposes the numbers so the consumer can apply their own policy (for example skip small icons before OCR). Unsupported or corrupt headers leave `width`/`height` as `null` and may add a warning.
 
 ### Kept vs omitted content
 
 - **Kept:** UI copy (“Clique para baixar”, “Download”, “Iniciar”), quiz prompts, correct-answer labels when present in package data
-- **Omitted (player chrome files):** `midias/interface/`, `midias/bg/`, fonts, `img-logo`
+- **Omitted (player chrome files):** `midias/interface/`, `resources/interface/`, `bg/`, fonts, `img-logo`
 
 ### Bytes: when filled vs null
 
@@ -68,7 +76,7 @@ Intentionally omitted: `documents[].title` (already in `text`), `images[].role` 
 | `extract(zip)` defaults | filled | filled | `null` (unless `includeBytes.videos: true` and local file) |
 | `toJSON(result, { omitBytes: true })` | omitted in JSON | omitted in JSON | omitted in JSON |
 
-Use default `extract()` (or enable `includeBytes`) when you need binary payloads for OCR. Remote videos (Vimeo/YouTube) always have `bytes: null` and a `url`.
+Use default `extract()` (or enable `includeBytes`) when you need binary payloads for OCR. Remote videos (Vimeo/YouTube) always have `bytes: null` and a `url`. `width` / `height` / `byteSize` on images do not depend on this table.
 
 ### JSON transport
 
@@ -103,7 +111,7 @@ Failures **throw** a `ScormExtractorError` subclass with stable `code`:
 | `INVALID_PACKAGE` | `InvalidPackageError` | Corrupt ZIP, missing data.js, … |
 | `PACKAGE_TOO_LARGE` | `PackageTooLargeError` | Over size limit |
 | `UNSAFE_ZIP_PATH` | `UnsafeZipPathError` | Zip-slip |
-| `UNSUPPORTED_PACKAGE_FORMAT` | `UnsupportedPackageFormatError` | Not HoApp; see `detectedFormat` |
+| `UNSUPPORTED_PACKAGE_FORMAT` | `UnsupportedPackageFormatError` | Not HoApp/AST OnePage; see `detectedFormat` |
 
 Soft issues go to `result.warnings[]`. Extraction **continues**. Known warnings today:
 
@@ -112,7 +120,7 @@ Soft issues go to `result.warnings[]`. Extraction **continues**. Known warnings 
 | `course.title looks like a leftover template` | `iCourse.title` barely appears in screen content (e.g. Novo_CIEVO_M01 titled as another course). Use screen text / your CMS title; do not trust `course.title` blindly. |
 | `Missing image '…' in tela_X` | Marker references a path not present in the ZIP; `bytes` stays `null`. |
 | `Missing PDF '…' in tela_X` | Same for PDF. |
-| `Missing video '…' in tela_X` | Same for local video when bytes were requested. |
+| `Could not read image dimensions for '…' in tela_X` | File exists but PNG/JPEG/GIF/WebP header could not be parsed; `width`/`height` stay `null`. |
 
 ```ts
 import { extract, ErrorCode, isScormExtractorError } from "scorm-extractor";
@@ -134,6 +142,7 @@ SCORM is an envelope. Content lives in the authoring export.
 | Format | Today | Behavior |
 | --- | --- | --- |
 | HoApp (dialects A & B) | Supported | Full extract |
+| AST OnePage | Supported | Full extract (`div#cN` screens; optional `quiz/*.json`) |
 | Storyline | Not parsed | Error + `detectedFormat: "storyline"` |
 | Rise | Not parsed | `detectedFormat: "rise"` |
 | Captivate | Not parsed | `detectedFormat: "captivate"` |
@@ -149,6 +158,17 @@ const result = await extract(zipPath);
 for (const doc of result.documents) {
   let text = doc.text;
   for (const image of doc.images) {
+    // The library does not filter or crop. Drop tiny icons before OCR yourself:
+    const tooSmall =
+      image.width !== null &&
+      image.height !== null &&
+      image.width < 32 &&
+      image.height < 32;
+    const tooLight = image.byteSize !== null && image.byteSize < 2_000;
+    if (tooSmall || tooLight) {
+      text = text.replaceAll(`[${image.ref}]`, "");
+      continue;
+    }
     text = text.replaceAll(`[${image.ref}]`, await ocrImage(image.bytes));
   }
   for (const pdf of doc.pdfs) {

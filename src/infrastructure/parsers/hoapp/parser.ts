@@ -11,7 +11,12 @@ import {
   type VideoAsset,
 } from "../../../domain/models.js";
 import type { PackageParser, PackageReader } from "../../../domain/ports.js";
-import { AssetLoader, bytesStatusFromLoaded } from "../../asset-loader.js";
+import {
+  AssetLoader,
+  bytesStatusFromLoaded,
+  hydrateImageAsset,
+  imageDimensionWarning,
+} from "../../asset-loader.js";
 import { dedupeResponsiveHtml } from "../html/responsive-deduper.js";
 import {
   linearizeHtml,
@@ -104,12 +109,13 @@ async function screenFromSection(
     if (loaded.missing) {
       warnings.push(`Missing image '${image.originalPath}' in ${section.id}`);
     }
-    images.push({
-      ...image,
-      mimeType: loaded.mimeType,
-      bytes: loaded.bytes,
-      bytesStatus: bytesStatusFromLoaded(loaded),
-    });
+    const dimWarning = imageDimensionWarning(
+      loaded,
+      image.originalPath,
+      section.id,
+    );
+    if (dimWarning) warnings.push(dimWarning);
+    images.push(hydrateImageAsset(image, loaded));
   }
 
   const pdfs: PdfAsset[] = [];

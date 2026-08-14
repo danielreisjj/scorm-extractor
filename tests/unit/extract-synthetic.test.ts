@@ -31,6 +31,9 @@ describe("extract() synthetic HoApp zip", () => {
     expect(screen?.text.match(/Duplicado/g)).toHaveLength(1);
     expect(screen?.images[0]?.bytes).toBeInstanceOf(Uint8Array);
     expect(screen?.images[0]?.filename).toBe("foto.png");
+    expect(screen?.images[0]?.width).toBe(1);
+    expect(screen?.images[0]?.height).toBe(1);
+    expect(screen?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
     expect(screen?.pdfs[0]?.bytes).toBeInstanceOf(Uint8Array);
     expect(screen?.pdfs[0]?.filename).toBe("a.pdf");
     expect(screen?.videos[0]?.source).toBe("vimeo");
@@ -47,6 +50,8 @@ describe("extract() synthetic HoApp zip", () => {
       { includeBytes: { images: false, pdfs: false } },
     );
     expect(result.documents[0]?.images[0]?.bytes).toBeNull();
+    expect(result.documents[0]?.images[0]?.width).toBe(1);
+    expect(result.documents[0]?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
   });
 
   it("serializes bytes via toJSON", async () => {

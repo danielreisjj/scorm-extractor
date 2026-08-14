@@ -10,8 +10,15 @@ export function classifyAsset(
 ): AssetRole {
   const normalized = path.replace(/\\/g, "/").toLowerCase();
 
-  if (normalized.includes("midias/interface/")) return "chrome";
-  if (normalized.includes("midias/bg/")) return "chrome";
+  if (
+    normalized.includes("midias/interface/") ||
+    normalized.includes("resources/interface/")
+  ) {
+    return "chrome";
+  }
+  if (normalized.includes("midias/bg/") || /(?:^|\/)bg\//.test(normalized)) {
+    return "chrome";
+  }
   if (normalized.includes("/fonts/") || FONT_EXT.test(normalized)) return "chrome";
   if (CHROME_NAME.test(normalized)) return "chrome";
   if ((context.className ?? "").split(/\s+/).includes("img-logo")) return "chrome";

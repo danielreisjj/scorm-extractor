@@ -2,7 +2,11 @@ import {
   UnsupportedPackageFormatError,
   type DetectedUnsupportedFormat,
 } from "../domain/errors.js";
-import { HOAPP_FORMAT, type FormatId } from "../domain/format-id.js";
+import {
+  AST_ONEPAGE_FORMAT,
+  HOAPP_FORMAT,
+  type FormatId,
+} from "../domain/format-id.js";
 import type { FormatDetector, PackageReader } from "../domain/ports.js";
 
 const DATA_JS = "js/data.js";
@@ -12,12 +16,15 @@ export class HoappFormatDetector implements FormatDetector {
     if (await looksLikeHoapp(reader)) {
       return HOAPP_FORMAT;
     }
+    if (looksLikeAstOnepage(reader)) {
+      return AST_ONEPAGE_FORMAT;
+    }
 
     const detected = detectUnsupportedFormat(reader);
     const hint =
       detected === "unknown"
-        ? "No supported authoring format was recognized. Currently only HoApp (js/data.js + as-course) is supported. Add a parser for this format."
-        : `Package looks like ${detected}, which is not supported yet. Currently only HoApp is supported. Add a ${detected} parser or convert the package.`;
+        ? "No supported authoring format was recognized. Currently HoApp (js/data.js + as-course) and AST OnePage are supported. Add a parser for this format."
+        : `Package looks like ${detected}, which is not supported yet. Currently HoApp and AST OnePage are supported. Add a ${detected} parser or convert the package.`;
 
     throw new UnsupportedPackageFormatError(hint, { detectedFormat: detected });
   }
@@ -37,6 +44,19 @@ async function looksLikeHoapp(reader: PackageReader): Promise<boolean> {
     dataJs.includes("type: 'as-") ||
     dataJs.includes('type: "as-');
   return hasHoappFingerprint || hasTelas;
+}
+
+export function looksLikeAstOnepage(reader: PackageReader): boolean {
+  if (reader.has(DATA_JS)) return false;
+  const names = reader.list();
+  const hasActions = names.some((name) =>
+    /(?:^|\/)scripts\/js\/ast_onepage_actions(?:\.min)?\.js$/i.test(name),
+  );
+  const hasGrid = names.some((name) => /(?:^|\/)astgrid\.css$/i.test(name));
+  const hasModuleHtml = names.some((name) =>
+    /(?:^|\/)resources\/m\d+\/index\.html$/i.test(name),
+  );
+  return (hasActions || hasGrid) && hasModuleHtml;
 }
 
 export function detectUnsupportedFormat(

@@ -32,6 +32,17 @@ extract(source, options)
 
 Never `eval` / `new Function` package JavaScript.
 
+## AST OnePage pipeline
+
+1. Unwrap a first-level ZIP envelope when `imsmanifest.xml` is not at the ZIP root
+2. Follow `window.location` from root `index.html` to `resources/mN/index.html`
+3. Slice `div#cN` (fallback: top-level `.container`) as screens
+4. Linearize each section (flip-card `.back`, inline popups, native `<video>`)
+5. Load local MP4 under `resources/mN/videos/` as `source: "local"`
+6. If `resources/mN/quiz/quiz-*.json` exists, append a `kind: "quiz"` document
+
+PNG text is not OCR'd — content bitmaps stay `[IMAGE_n]` assets.
+
 ## Adding a parser
 
 1. Fingerprint in `format-detector.ts` (clear `detectedFormat` while unsupported).

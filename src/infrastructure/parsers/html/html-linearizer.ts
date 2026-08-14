@@ -2,12 +2,18 @@ import * as cheerio from "cheerio";
 import type { Element, AnyNode } from "domhandler";
 import type { ImageAsset, PdfAsset, VideoAsset } from "../../../domain/models.js";
 import { classifyAsset, mimeFromPath } from "../../asset-classifier.js";
-import { normalizeAssetPath } from "../../asset-loader.js";
+import {
+  isExternalUrl,
+  normalizeAssetPath,
+  resolvePackagePath,
+} from "../../asset-loader.js";
 import { filenameFromPath } from "../../../serialize.js";
 import { normalizeExtractedText } from "./text-normalizer.js";
 
 export interface LinearizeContext {
   videosById: Map<string, VideoComponentData>;
+  /** Directory of the HTML file inside the ZIP, used to resolve relative asset paths. */
+  basePath?: string;
 }
 
 export interface VideoComponentData {
@@ -62,6 +68,7 @@ export function linearizeHtml(
 
   const seenImages = new Set<string>();
   const seenPdfs = new Set<string>();
+  const seenVideos = new Set<string>();
 
   function pushText(value: string): void {
     if (value) chunks.push(value);
@@ -71,8 +78,18 @@ export function linearizeHtml(
     chunks.push("\n\n");
   }
 
+  function resolvePath(raw: string): string {
+    const normalized = normalizeAssetPath(raw);
+    if (!normalized) return "";
+    if (context.basePath) {
+      if (isExternalUrl(normalized)) return "";
+      return resolvePackagePath(context.basePath, normalized);
+    }
+    return normalized;
+  }
+
   function emitImage(src: string, alt: string, className: string): void {
-    const path = normalizeAssetPath(src);
+    const path = resolvePath(src);
     if (!path || seenImages.has(path)) return;
     if (classifyAsset(path, { className }) !== "content") return;
     seenImages.add(path);
@@ -84,6 +101,9 @@ export function linearizeHtml(
       originalPath: path,
       filename: filenameFromPath(path),
       alt,
+      width: null,
+      height: null,
+      byteSize: null,
       bytes: null,
       bytesStatus: "omitted",
     });
@@ -93,7 +113,8 @@ export function linearizeHtml(
   }
 
   function emitPdf(pathRaw: string): void {
-    const path = normalizeAssetPath(pathRaw);
+    if (isExternalUrl(pathRaw)) return;
+    const path = resolvePath(pathRaw);
     if (!path.toLowerCase().endsWith(".pdf") || seenPdfs.has(path)) return;
     seenPdfs.add(path);
     const index = pdfs.length;
@@ -120,6 +141,13 @@ export function linearizeHtml(
     pushBlock();
   }
 
+  function emitLocalVideo(pathRaw: string, title: string): void {
+    const path = resolvePath(pathRaw);
+    if (!path || seenVideos.has(path)) return;
+    seenVideos.add(path);
+    emitVideo({ videoType: "FILE", path, title });
+  }
+
   function walk(node: AnyNode): void {
     if (node.type === "text") {
       pushText(decodeText(node.data ?? ""));
@@ -138,6 +166,11 @@ export function linearizeHtml(
       const id = node.attribs["data-extract-video"] ?? "";
       const data = context.videosById.get(id);
       if (data) emitVideo(data);
+      return;
+    }
+
+    if (tag === "video") {
+      emitLocalVideo(videoSrcFromElement(node), node.attribs.title ?? "");
       return;
     }
 
@@ -210,6 +243,17 @@ export function classifyVideoSource(
     return "youtube";
   }
   return "local";
+}
+
+function videoSrcFromElement(el: Element): string {
+  const direct = el.attribs.src ?? "";
+  if (direct.trim()) return direct;
+  for (const child of el.childNodes) {
+    if (!isElement(child) || child.tagName.toLowerCase() !== "source") continue;
+    const src = child.attribs.src ?? "";
+    if (src.trim()) return src;
+  }
+  return "";
 }
 
 function videoFromUrl(src: string): VideoComponentData | null {

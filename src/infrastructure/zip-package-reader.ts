@@ -6,6 +6,7 @@ import {
 } from "../domain/errors.js";
 import { DEFAULT_MAX_UNCOMPRESSED_BYTES } from "../domain/models.js";
 import type { PackageReader } from "../domain/ports.js";
+import { findZipContentRoot } from "./zip-content-root.js";
 
 export type ZipOpenOptions = {
   maxUncompressedBytes?: number;
@@ -51,7 +52,7 @@ export class ZipPackageReader implements PackageReader {
       throw new InvalidPackageError("ZIP archive contains no files");
     }
 
-    return new ZipPackageReader(files);
+    return new ZipPackageReader(rebaseToContentRoot(files));
   }
 
   list(): string[] {
@@ -88,6 +89,27 @@ export function sanitizeZipPath(rawName: string): string {
     );
   }
   return normalizePath(normalized);
+}
+
+function rebaseToContentRoot(
+  files: Map<string, Uint8Array>,
+): Map<string, Uint8Array> {
+  const contentRoot = findZipContentRoot([...files.keys()]);
+  if (!contentRoot) return files;
+
+  const prefix = `${contentRoot.replace(/\/+$/, "")}/`;
+  const rebased = new Map<string, Uint8Array>();
+  for (const [name, bytes] of files) {
+    if (!name.startsWith(prefix)) continue;
+    const stripped = name.slice(prefix.length);
+    if (stripped) rebased.set(stripped, bytes);
+  }
+  if (rebased.size === 0) {
+    throw new InvalidPackageError(
+      `ZIP envelope folder "${contentRoot}" contains no files`,
+    );
+  }
+  return rebased;
 }
 
 function normalizePath(path: string): string {
