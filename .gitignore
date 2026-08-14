@@ -1,0 +1,45 @@
+# Dependencies & build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local extraction output & test artifacts
+output/
+tests/artifacts/
+
+# Client SCORM packages (never commit)
+scorms/*.zip
+scorms/**/*.zip
+
+# Local-only guides / proprietary drafts
+private/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs & OS junk
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs (local only)
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Agent / AI tooling (local only — do not push)
+.cursor/
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Coverage & misc tooling
+coverage/
+.nyc_output/
+*.pem
+.turbo/

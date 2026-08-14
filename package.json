@@ -1,0 +1,53 @@
+{
+  "name": "scorm-extractor",
+  "version": "0.2.0",
+  "description": "Extract linearized screen text and media assets from SCORM packages (HoApp first).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src tests",
+    "extract:samples": "vitest run tests/integration/extract-samples.test.ts",
+    "extract:all": "tsx scripts/extract-all.ts"
+  },
+  "keywords": [
+    "scorm",
+    "hoapp",
+    "extract"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "jszip": "^3.10.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^20.19.11",
+    "eslint": "^9.39.4",
+    "globals": "^17.4.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.58.0",
+    "vitest": "^3.2.4"
+  }
+}
