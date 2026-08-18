@@ -25,7 +25,7 @@ export const MINI_AST_CONTENT = `<!doctype html>
 <div id="c1" class="container">
   <h1>Introdução</h1>
   <img src="./images/foto.png" alt="foto">
-  <img src="./images/logo_comite.png" alt="logo">
+  <img src="./images/logo.png" alt="logo">
   <img src="../interface/nav.png" alt="nav">
   <div class="flipcard">
     <div class="front"><h3>Frente do card</h3></div>
@@ -37,7 +37,7 @@ export const MINI_AST_CONTENT = `<!doctype html>
   <video id="video" poster="./videos/aula_poster.jpg">
     <source src="./videos/aula.mp4" type="video/mp4" />
   </video>
-  <button onclick="newPopup('imagem','./images/c13-popup.png')">Saiba mais</button>
+  <button onclick="newPopup('imagem','./images/imagem01.png')">Saiba mais</button>
   <a onclick="window.open('./docs/guia.pdf')">Download</a>
 </div>
 <div class="popup" id="pop-media">

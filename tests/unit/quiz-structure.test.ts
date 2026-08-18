@@ -22,7 +22,7 @@ async function astZip(quizJson: string): Promise<Uint8Array> {
   zip.file("scripts/css/astgrid.css", "/* grid */");
   zip.file("resources/m1/index.html", MINI_AST_CONTENT);
   zip.file("resources/m1/images/foto.png", TINY_PNG);
-  zip.file("resources/m1/images/c13-popup.png", TINY_PNG);
+  zip.file("resources/m1/images/imagem01.png", TINY_PNG);
   zip.file("resources/m1/videos/aula.mp4", "fake-mp4");
   zip.file("resources/m1/docs/guia.pdf", "%PDF-1.4 mini");
   zip.file("resources/m1/quiz/quiz-1.json", quizJson);
@@ -37,16 +37,16 @@ describe("structured quiz field", () => {
           initial_screen: { title: "Quiz", text: "Go", image_url: "", button_label: "Iniciar" },
           questions: [
             {
-              title: "HISTÓRIA DE MIGUEL",
+              title: "HISTÓRIA DE ANA",
               description:
-                "Miguel tem 17 anos e viaja sozinho.<br /><br /><b>Que tipo de violência Miguel sofreu?</b>",
+                "Ana tem 15 anos e joga vôlei.<br /><br /><b>Qual esporte Ana pratica?</b>",
               type: "multiple_choice",
               right_answer: "A",
               positive_feedback_text: "Isso mesmo!",
               negative_feedback_text: "Não foi dessa vez.",
               options: [
-                { label: "A) Negligência.", value: "A" },
-                { label: "B) Violência física.", value: "B" },
+                { label: "A) Vôlei.", value: "A" },
+                { label: "B) Basquete.", value: "B" },
               ],
             },
           ],
@@ -60,12 +60,12 @@ describe("structured quiz field", () => {
     expect(quiz.quiz.questions).toHaveLength(1);
     const question = quiz.quiz.questions[0];
     expect(question?.type).toBe("choice");
-    expect(question?.question).toBe("Que tipo de violência Miguel sofreu?");
-    expect(question?.context).toContain("HISTÓRIA DE MIGUEL");
-    expect(question?.context).toContain("Miguel tem 17 anos");
+    expect(question?.question).toBe("Qual esporte Ana pratica?");
+    expect(question?.context).toContain("HISTÓRIA DE ANA");
+    expect(question?.context).toContain("Ana tem 15 anos");
     expect(question?.responses).toEqual([
-      { text: "A) Negligência.", correct: true },
-      { text: "B) Violência física.", correct: false },
+      { text: "A) Vôlei.", correct: true },
+      { text: "B) Basquete.", correct: false },
     ]);
     expect(question?.feedback).toEqual({
       correct: "Isso mesmo!",

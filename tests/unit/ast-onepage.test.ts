@@ -80,8 +80,8 @@ describe("extract() synthetic AST OnePage zip", () => {
       "scripts/css/astgrid.css": "/* grid */",
       "resources/m1/index.html": MINI_AST_CONTENT,
       "resources/m1/images/foto.png": TINY_PNG,
-      "resources/m1/images/c13-popup.png": TINY_PNG,
-      "resources/m1/images/logo_comite.png": TINY_PNG,
+      "resources/m1/images/imagem01.png": TINY_PNG,
+      "resources/m1/images/logo.png": TINY_PNG,
       "resources/interface/nav.png": TINY_PNG,
       "resources/m1/videos/aula.mp4": "fake-mp4",
       "resources/m1/docs/guia.pdf": "%PDF-1.4 mini",
@@ -134,7 +134,7 @@ describe("extract() synthetic AST OnePage zip", () => {
     });
     expect(media?.pdfs[0]?.originalPath).toBe("resources/m1/docs/guia.pdf");
     expect(media?.images[0]?.originalPath).toBe(
-      "resources/m1/images/c13-popup.png",
+      "resources/m1/images/imagem01.png",
     );
   });
 
@@ -281,7 +281,7 @@ describe("extract() synthetic AST OnePage zip", () => {
       "Curso/scripts/css/astgrid.css": "/* grid */",
       "Curso/resources/m1/index.html": MINI_AST_CONTENT,
       "Curso/resources/m1/images/foto.png": TINY_PNG,
-      "Curso/resources/m1/images/c13-popup.png": TINY_PNG,
+      "Curso/resources/m1/images/imagem01.png": TINY_PNG,
       "Curso/resources/m1/videos/aula.mp4": "fake-mp4",
       "Curso/resources/m1/docs/guia.pdf": "%PDF-1.4 mini",
     });

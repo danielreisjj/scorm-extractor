@@ -36,30 +36,30 @@ async function zipFromDataJs(dataJs: string): Promise<Uint8Array> {
 describe("HoApp dialect B as-texto extraction", () => {
   it("linearizes data.value from as-texto stubs through extract()", async () => {
     const dataJs = `
-const c97875 = {
-	id: '97875',
+const c1001 = {
+	id: '1001',
 	type: 'as-texto',
-	data: {"value":"<p>Olá! Sejam bem-vindos &agrave; <strong>LGPD</strong>.</p>"},
+	data: {"value":"<p>Olá! Sejam bem-vindos &agrave; <strong>aula inicial</strong>.</p>"},
 };
-components.push(c97875);
-const ce86c = {
-	id: 'e86c',
+components.push(c1001);
+const cvid1 = {
+	id: 'vid1',
 	type: 'as-video',
 	data: {"videoType":"VIMEO","path":"https://player.vimeo.com/video/1","title":"Intro"},
 };
-components.push(ce86c);
+components.push(cvid1);
 sections.push({
 	id: 'tela_01',
 	data: {
 		position: 1,
-		content: \`<as-texto id="97875"></as-texto><as-video id="e86c"></as-video>\`,
+		content: \`<as-texto id="1001"></as-texto><as-video id="vid1"></as-video>\`,
 	},
 });
-const iCourse = { title: \`LGPD\`, code: \`COB\`, language: \`pt\` };
+const iCourse = { title: \`Curso Exemplo\`, code: \`TST\`, language: \`pt\` };
 `;
     const result = await extract(await zipFromDataJs(dataJs));
     const screen = result.documents[0];
-    expect(screen?.text).toContain("Olá! Sejam bem-vindos à LGPD.");
+    expect(screen?.text).toContain("Olá! Sejam bem-vindos à aula inicial.");
     expect(screen?.text).toContain("[VIDEO_0]");
     expect(screen?.videos).toHaveLength(1);
     expect(

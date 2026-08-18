@@ -77,12 +77,12 @@ describe("extractTemplateLiteral", () => {
 describe("readJsStringField / readJsNumberField", () => {
   it("reads backtick, single-quoted, and double-quoted string fields", () => {
     expect(readJsStringField("{ title: `Módulo` }", "title")).toBe("Módulo");
-    expect(readJsStringField("{ title: 'Atletismo' }", "title")).toBe("Atletismo");
-    expect(readJsStringField('{ title: "Salto" }', "title")).toBe("Salto");
+    expect(readJsStringField("{ title: 'Curso' }", "title")).toBe("Curso");
+    expect(readJsStringField('{ title: "Texto" }', "title")).toBe("Texto");
   });
 
   it("returns empty string when the field is absent", () => {
-    expect(readJsStringField("{ code: `COB` }", "title")).toBe("");
+    expect(readJsStringField("{ code: `TST` }", "title")).toBe("");
   });
 
   it("propagates unterminated template literals from a backtick field", () => {

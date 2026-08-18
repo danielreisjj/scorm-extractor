@@ -53,8 +53,8 @@ describe("isChoiceAuthoringType", () => {
 
 describe("applyAnswerKey", () => {
   const responses = [
-    { text: "A) Negligência", correct: false },
-    { text: "B) Física", correct: false },
+    { text: "A) Azul", correct: false },
+    { text: "B) Verde", correct: false },
   ];
 
   it("returns hasKey false for an empty response list", () => {

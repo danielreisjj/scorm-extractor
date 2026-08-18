@@ -5,36 +5,36 @@ import { expandComponents } from "../../src/infrastructure/parsers/hoapp/compone
 const SNIPPET = `
 const { Accordion, SectionEditable, MenuItem } = HoApp;
 const iCourse = {
-	title: \`Módulo 4 - Atletismo\`,
-	code: \`COB\`,
+	title: \`Módulo 4 - Curso Exemplo\`,
+	code: \`TST\`,
 	language: \`pt\`,
 };
-const cacba = new MenuItem(
-	'acba',
+const cmenu1 = new MenuItem(
+	'menu1',
 	{
   "version": 1,
-  "label": "Ídolos"
+  "label": "Exemplos"
 },
 );
-const cde4e = new Accordion(
-	'de4e',
+const cacc1 = new Accordion(
+	'acc1',
 	{
   "version": 2,
   "items": [
     {
-      "title": "Adhemar Ferreira da Silva",
-      "content": "<p>Salto triplo</p>"
+      "title": "Personagem Exemplo",
+      "content": "<p>Texto do acordeão</p>"
     }
   ]
 },
 );
 sections.push(
 	new SectionEditable(
-		'tela_06',
+		'tela_01',
 		{
 			position: 6,
-			content: \`<as-menu-item id="acba"></as-menu-item><p>Ídolos</p><as-accordion id="de4e"></as-accordion>\`,
-			components: [cde4e],
+			content: \`<as-menu-item id="menu1"></as-menu-item><p>Exemplos</p><as-accordion id="acc1"></as-accordion>\`,
+			components: [cacc1],
 		}
 	)
 );
@@ -43,11 +43,11 @@ sections.push(
 describe("HoApp dialect A", () => {
   it("parses constructors into a shared IR", () => {
     const ir = parseDialectA(SNIPPET);
-    expect(ir.course.title).toContain("Atletismo");
+    expect(ir.course.title).toContain("Curso Exemplo");
     expect(ir.sections).toHaveLength(1);
-    expect(ir.components.get("de4e")?.type).toBe("accordion");
+    expect(ir.components.get("acc1")?.type).toBe("accordion");
     const expanded = expandComponents(ir.sections[0]?.content ?? "", ir.components);
-    expect(expanded).toContain("Adhemar Ferreira da Silva");
-    expect(expanded).toContain("Salto triplo");
+    expect(expanded).toContain("Personagem Exemplo");
+    expect(expanded).toContain("Texto do acordeão");
   });
 });
