@@ -2,6 +2,7 @@ import {
   UnsupportedPackageFormatError,
   type DetectedUnsupportedFormat,
 } from "../domain/errors.js";
+import { unsupportedPackageFormatMessage } from "../domain/format-names.js";
 import {
   AST_ONEPAGE_FORMAT,
   HOAPP_FORMAT,
@@ -21,12 +22,10 @@ export class HoappFormatDetector implements FormatDetector {
     }
 
     const detected = detectUnsupportedFormat(reader);
-    const hint =
-      detected === "unknown"
-        ? "No supported authoring format was recognized. Currently HoApp (js/data.js + as-course) and AST OnePage are supported. Add a parser for this format."
-        : `Package looks like ${detected}, which is not supported yet. Currently HoApp and AST OnePage are supported. Add a ${detected} parser or convert the package.`;
-
-    throw new UnsupportedPackageFormatError(hint, { detectedFormat: detected });
+    throw new UnsupportedPackageFormatError(
+      unsupportedPackageFormatMessage(detected),
+      { detectedFormat: detected },
+    );
   }
 }
 

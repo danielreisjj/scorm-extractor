@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-08-18
+
+### Changed
+
+- Internal: HoApp and AST OnePage now hydrate image/PDF/video assets through one shared loader (`loadLinearizedMedia`). Public API, `extract()` behavior, and `schemaVersion` (2) are unchanged.
+
+## [0.5.2] - 2026-08-18
+
+### Removed
+
+- Unused internal `indexOfUnquoted` helper from the HoApp JS parser. No public API or extraction-behavior change; `schemaVersion` remains 2.
+
+### Tests
+
+- Direct coverage of HoApp quiz structuring (answer key present/absent, correct-flag aliases, missing alternatives, unsupported `type: "other"`) and of JS literal parsing (`extractBalanced`: quotes, escapes, comments, nesting, truncated input).
+
+## [0.5.1] - 2026-08-18
+
+### Fixed
+
+- Unsupported-format error copy: display names (`AST OnePage`, `Storyline`) are interpolated from a single helper so tokens are never glued (`ASTOnePage`, `storylineparser`). `detectedFormat` is unchanged.
+
 ## [0.5.0] - 2026-08-18
 
 ### Added

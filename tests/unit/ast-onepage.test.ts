@@ -180,6 +180,99 @@ describe("extract() synthetic AST OnePage zip", () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it("loads image, PDF and local video bytes when includeBytes is true", async () => {
+    const result = await extract(await miniAst(), {
+      includeBytes: { images: true, pdfs: true, videos: true },
+    });
+    const intro = result.documents[0];
+    expect(intro?.images[0]?.bytesStatus).toBe("present");
+    expect(intro?.images[0]?.bytes).toBeInstanceOf(Uint8Array);
+    expect(intro?.images[0]?.mimeType).toBe("image/png");
+    expect(intro?.images[0]?.width).toBe(1);
+    expect(intro?.images[0]?.height).toBe(1);
+    expect(intro?.images[0]?.byteSize).toBe(TINY_PNG.byteLength);
+
+    const media = result.documents[1];
+    expect(media?.pdfs[0]).toMatchObject({
+      mimeType: "application/pdf",
+      originalPath: "resources/m1/docs/guia.pdf",
+      bytesStatus: "present",
+    });
+    expect(media?.pdfs[0]?.bytes).toBeInstanceOf(Uint8Array);
+    expect(media?.videos[0]).toMatchObject({
+      source: "local",
+      mimeType: "video/mp4",
+      originalPath: "resources/m1/videos/aula.mp4",
+      bytesStatus: "present",
+    });
+    expect(media?.videos[0]?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  it("marks missing AST image, PDF and local video and warns", async () => {
+    const result = await extract(
+      await zipWith({
+        "imsmanifest.xml": MINI_IMS_MANIFEST,
+        "index.html": MINI_AST_INDEX,
+        "scripts/js/ast_onepage_actions.js": "/* ast onepage */",
+        "scripts/css/astgrid.css": "/* grid */",
+        "resources/m1/index.html": MINI_AST_CONTENT,
+      }),
+    );
+    const intro = result.documents[0];
+    expect(intro?.images[0]?.bytesStatus).toBe("missing");
+    expect(intro?.images[0]?.bytes).toBeNull();
+    expect(intro?.images[0]?.width).toBeNull();
+    const media = result.documents[1];
+    expect(media?.pdfs[0]?.bytesStatus).toBe("missing");
+    expect(media?.videos[0]?.bytesStatus).toBe("missing");
+    expect(media?.videos[0]?.source).toBe("local");
+    expect(result.warnings.some((warning) => warning.includes("Missing image"))).toBe(
+      true,
+    );
+    expect(result.warnings.some((warning) => warning.includes("Missing PDF"))).toBe(
+      true,
+    );
+    expect(result.warnings.some((warning) => warning.includes("Missing video"))).toBe(
+      true,
+    );
+  });
+
+  it("keeps AST iframe Vimeo/YouTube as remote videos", async () => {
+    const html = `<!doctype html>
+<html lang="pt"><body>
+<div id="c1" class="container">
+  <iframe src="https://player.vimeo.com/video/1"></iframe>
+  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+</div>
+</body></html>`;
+    const result = await extract(
+      await zipWith({
+        "imsmanifest.xml": MINI_IMS_MANIFEST,
+        "index.html": MINI_AST_INDEX,
+        "scripts/js/ast_onepage_actions.js": "/* ast onepage */",
+        "scripts/css/astgrid.css": "/* grid */",
+        "resources/m1/index.html": html,
+      }),
+      { includeBytes: { videos: true } },
+    );
+    expect(result.documents[0]?.videos).toEqual([
+      expect.objectContaining({
+        source: "vimeo",
+        url: "https://player.vimeo.com/video/1",
+        bytes: null,
+        bytesStatus: "remote",
+        originalPath: null,
+      }),
+      expect.objectContaining({
+        source: "youtube",
+        url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        bytes: null,
+        bytesStatus: "remote",
+        originalPath: null,
+      }),
+    ]);
+  });
+
   it("extracts a nested AST OnePage envelope", async () => {
     const bytes = await zipWith({
       "Curso/imsmanifest.xml": MINI_IMS_MANIFEST,

@@ -5,18 +5,11 @@ import {
   type DocumentKind,
   type ExtractedDocument,
   type ExtractionResult,
-  type ImageAsset,
-  type PdfAsset,
   type ResolvedExtractOptions,
-  type VideoAsset,
 } from "../../../domain/models.js";
 import type { PackageParser, PackageReader } from "../../../domain/ports.js";
-import {
-  AssetLoader,
-  bytesStatusFromLoaded,
-  hydrateImageAsset,
-  imageDimensionWarning,
-} from "../../asset-loader.js";
+import { AssetLoader } from "../../asset-loader.js";
+import { loadLinearizedMedia } from "../../load-linearized-media.js";
 import { dedupeResponsiveHtml } from "../html/responsive-deduper.js";
 import {
   linearizeHtml,
@@ -103,66 +96,13 @@ async function screenFromSection(
   const deduped = dedupeResponsiveHtml(expanded);
   const videosById = collectVideos(ir.components);
   const linearized = linearizeHtml(deduped, { videosById });
-
-  const images: ImageAsset[] = [];
-  for (const image of linearized.images) {
-    const loaded = await loader.loadAsset(
-      image.originalPath,
-      options.includeBytes.images,
-    );
-    if (loaded.missing) {
-      warnings.push(`Missing image '${image.originalPath}' in ${section.id}`);
-    }
-    const dimWarning = imageDimensionWarning(
-      loaded,
-      image.originalPath,
-      section.id,
-    );
-    if (dimWarning) warnings.push(dimWarning);
-    images.push(hydrateImageAsset(image, loaded));
-  }
-
-  const pdfs: PdfAsset[] = [];
-  for (const pdf of linearized.pdfs) {
-    const loaded = await loader.loadAsset(
-      pdf.originalPath,
-      options.includeBytes.pdfs,
-    );
-    if (loaded.missing) {
-      warnings.push(`Missing PDF '${pdf.originalPath}' in ${section.id}`);
-    }
-    pdfs.push({
-      ...pdf,
-      mimeType: "application/pdf",
-      bytes: loaded.bytes,
-      bytesStatus: bytesStatusFromLoaded(loaded),
-    });
-  }
-
-  const videos: VideoAsset[] = [];
-  for (const video of linearized.videos) {
-    if (video.source === "local" && video.originalPath) {
-      const loaded = await loader.loadAsset(
-        video.originalPath,
-        options.includeBytes.videos,
-      );
-      if (loaded.missing) {
-        warnings.push(
-          `Missing video '${video.originalPath}' in ${section.id}`,
-        );
-      }
-      videos.push({
-        ...video,
-        mimeType: loaded.mimeType,
-        bytes: loaded.bytes,
-        bytesStatus: bytesStatusFromLoaded(loaded),
-      });
-    } else if (video.source === "vimeo" || video.source === "youtube") {
-      videos.push({ ...video, bytes: null, bytesStatus: "remote" });
-    } else {
-      videos.push({ ...video, bytes: null, bytesStatus: "missing" });
-    }
-  }
+  const { images, pdfs, videos } = await loadLinearizedMedia(
+    linearized,
+    loader,
+    options.includeBytes,
+    warnings,
+    section.id,
+  );
 
   if (kind === "quiz") {
     const structured = quizFromHoappComponents(section.id, sectionComponents);

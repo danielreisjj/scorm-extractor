@@ -11,6 +11,10 @@ import {
   UnsafeZipPathError,
   UnsupportedPackageFormatError,
 } from "../../src/index.js";
+import {
+  formatDisplayName,
+  unsupportedPackageFormatMessage,
+} from "../../src/domain/format-names.js";
 import { sanitizeZipPath } from "../../src/infrastructure/zip-package-reader.js";
 import { MINI_HOAPP_DATA_JS } from "../fixtures/mini-hoapp.js";
 
@@ -90,9 +94,35 @@ describe("error codes", () => {
       if (error instanceof UnsupportedPackageFormatError) {
         expect(error.code).toBe(ErrorCode.UNSUPPORTED_PACKAGE_FORMAT);
         expect(error.detectedFormat).toBe("storyline");
-        expect(error.message.toLowerCase()).toContain("storyline");
+        expect(error.message).toBe(unsupportedPackageFormatMessage("storyline"));
+        expect(error.message).toContain("AST OnePage");
+        expect(error.message).not.toContain("ASTOnePage");
+        expect(error.message).toContain("Add a Storyline parser");
+        expect(error.message).not.toMatch(/storylineparser/i);
       }
     }
+  });
+
+  it("unsupported format messages keep display-name spacing", () => {
+    expect(formatDisplayName("ast-onepage")).toBe("AST OnePage");
+    expect(formatDisplayName("storyline")).toBe("Storyline");
+    expect(formatDisplayName("hoapp")).toBe("HoApp");
+
+    const storyline = unsupportedPackageFormatMessage("storyline");
+    expect(storyline).toBe(
+      "Package looks like Storyline, which is not supported yet. Currently HoApp and AST OnePage are supported. Add a Storyline parser or convert the package.",
+    );
+    expect(storyline).toContain("AST OnePage");
+    expect(storyline).not.toContain("ASTOnePage");
+    expect(storyline).toContain("Storyline parser");
+    expect(storyline).not.toMatch(/storylineparser/i);
+
+    const unknown = unsupportedPackageFormatMessage("unknown");
+    expect(unknown).toBe(
+      "No supported authoring format was recognized. Currently HoApp and AST OnePage are supported. Add a parser for this format.",
+    );
+    expect(unknown).toContain("AST OnePage");
+    expect(unknown).not.toContain("ASTOnePage");
   });
 
   it("isScormExtractorError type guard", () => {

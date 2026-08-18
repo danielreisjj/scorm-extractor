@@ -6,7 +6,7 @@ TypeScript library for Node.js 20+ (ESM). Call `extract()` from your application
 
 | | |
 | --- | --- |
-| Version | `0.5.0` |
+| Version | `0.5.3` |
 | Runtime | Node.js ≥ 20 (ESM) |
 | Format | HoApp, AST OnePage |
 | License | UNLICENSED |

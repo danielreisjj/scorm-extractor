@@ -4,23 +4,13 @@ import {
   EXTRACTION_SCHEMA_VERSION,
   type ExtractedDocument,
   type ExtractionResult,
-  type ImageAsset,
-  type PdfAsset,
   type Quiz,
   type ResolvedExtractOptions,
-  type VideoAsset,
 } from "../../../domain/models.js";
 import type { PackageParser, PackageReader } from "../../../domain/ports.js";
-import {
-  AssetLoader,
-  bytesStatusFromLoaded,
-  hydrateImageAsset,
-  imageDimensionWarning,
-} from "../../asset-loader.js";
-import {
-  linearizeHtml,
-  type LinearizedScreen,
-} from "../html/html-linearizer.js";
+import { AssetLoader } from "../../asset-loader.js";
+import { loadLinearizedMedia } from "../../load-linearized-media.js";
+import { linearizeHtml } from "../html/html-linearizer.js";
 import {
   readContentHtml,
   readCourseMeta,
@@ -113,9 +103,13 @@ async function documentFromHtml(
     videosById: new Map(),
     basePath,
   });
-  const images = await loadImages(linearized, loader, options, warnings, id);
-  const pdfs = await loadPdfs(linearized, loader, options, warnings, id);
-  const videos = await loadVideos(linearized, loader, options, warnings, id);
+  const { images, pdfs, videos } = await loadLinearizedMedia(
+    linearized,
+    loader,
+    options.includeBytes,
+    warnings,
+    id,
+  );
   if (kind === "quiz") {
     return {
       id,
@@ -137,87 +131,6 @@ async function documentFromHtml(
     pdfs,
     videos,
   };
-}
-
-async function loadImages(
-  linearized: LinearizedScreen,
-  loader: AssetLoader,
-  options: ResolvedExtractOptions,
-  warnings: string[],
-  screenId: string,
-): Promise<ImageAsset[]> {
-  const images: ImageAsset[] = [];
-  for (const image of linearized.images) {
-    const loaded = await loader.loadAsset(
-      image.originalPath,
-      options.includeBytes.images,
-    );
-    if (loaded.missing) {
-      warnings.push(`Missing image '${image.originalPath}' in ${screenId}`);
-    }
-    const dimWarning = imageDimensionWarning(loaded, image.originalPath, screenId);
-    if (dimWarning) warnings.push(dimWarning);
-    images.push(hydrateImageAsset(image, loaded));
-  }
-  return images;
-}
-
-async function loadPdfs(
-  linearized: LinearizedScreen,
-  loader: AssetLoader,
-  options: ResolvedExtractOptions,
-  warnings: string[],
-  screenId: string,
-): Promise<PdfAsset[]> {
-  const pdfs: PdfAsset[] = [];
-  for (const pdf of linearized.pdfs) {
-    const loaded = await loader.loadAsset(
-      pdf.originalPath,
-      options.includeBytes.pdfs,
-    );
-    if (loaded.missing) {
-      warnings.push(`Missing PDF '${pdf.originalPath}' in ${screenId}`);
-    }
-    pdfs.push({
-      ...pdf,
-      mimeType: "application/pdf",
-      bytes: loaded.bytes,
-      bytesStatus: bytesStatusFromLoaded(loaded),
-    });
-  }
-  return pdfs;
-}
-
-async function loadVideos(
-  linearized: LinearizedScreen,
-  loader: AssetLoader,
-  options: ResolvedExtractOptions,
-  warnings: string[],
-  screenId: string,
-): Promise<VideoAsset[]> {
-  const videos: VideoAsset[] = [];
-  for (const video of linearized.videos) {
-    if (video.source === "local" && video.originalPath) {
-      const loaded = await loader.loadAsset(
-        video.originalPath,
-        options.includeBytes.videos,
-      );
-      if (loaded.missing) {
-        warnings.push(`Missing video '${video.originalPath}' in ${screenId}`);
-      }
-      videos.push({
-        ...video,
-        mimeType: loaded.mimeType,
-        bytes: loaded.bytes,
-        bytesStatus: bytesStatusFromLoaded(loaded),
-      });
-    } else if (video.source === "vimeo" || video.source === "youtube") {
-      videos.push({ ...video, bytes: null, bytesStatus: "remote" });
-    } else {
-      videos.push({ ...video, bytes: null, bytesStatus: "missing" });
-    }
-  }
-  return videos;
 }
 
 function dirname(path: string): string {
