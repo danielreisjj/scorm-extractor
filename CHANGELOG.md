@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-18
+
+### Added
+
+- Stable warning prefix `suspicious_empty_extraction` (`WarningCode.SUSPICIOUS_EMPTY_EXTRACTION`) when a package has 4 or more screens and mean useful text (markers stripped) is below 40 characters per screen. Extraction continues; pipelines can detect silent empty extracts.
+
+### Fixed
+
+- HoApp dialect B: expand empty `<as-texto>` (and `as-titulo` / `as-subtitulo` / `as-paragrafo`) stubs from `components[].data.value` so screen `text` is no longer blank when copy lives in `components.push` rather than inline `content:`.
+
 ## [0.4.0] - 2026-08-14
 
 ### Changed

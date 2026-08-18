@@ -39,4 +39,27 @@ describe("HoApp dialect B", () => {
     expect(expanded).toContain("data-extract-video=\"e86c\"");
     expect(expanded).toContain("Não satisfaça todas as vontades");
   });
+
+  it("injects as-texto data.value into empty stubs", () => {
+    const ir = parseDialectB(`
+const c97875 = {
+	id: '97875',
+	type: 'as-texto',
+	data: {"style":"texto-subtitulo","value":"<p>Olá! Sejam bem-vindos à LGPD.</p>"},
+};
+components.push(c97875);
+sections.push({
+	id: '27619',
+	data: {
+		position: 3,
+		content: \`<as-texto id="97875" :asdata="section.getComponent('97875')"></as-texto>\`,
+	},
+});
+const iCourse = { title: \`LGPD\`, code: \`COB\`, language: \`pt\` };
+`);
+    expect(ir.components.get("97875")?.type).toBe("text");
+    const expanded = expandComponents(ir.sections[0]?.content ?? "", ir.components);
+    expect(expanded).toContain("Olá! Sejam bem-vindos à LGPD.");
+    expect(expanded).not.toContain("<as-texto");
+  });
 });

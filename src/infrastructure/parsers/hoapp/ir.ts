@@ -10,6 +10,7 @@ export type HoappComponentType =
   | "lock"
   | "assessment"
   | "question"
+  | "text"
   | "unknown";
 
 export interface HoappComponent {
@@ -62,6 +63,10 @@ const TYPE_BY_AS: Record<string, HoappComponentType> = {
   "as-trava-via-click": "lock",
   "as-assessment": "assessment",
   "as-question": "question",
+  "as-texto": "text",
+  "as-titulo": "text",
+  "as-subtitulo": "text",
+  "as-paragrafo": "text",
 };
 
 export function typeFromConstructor(name: string): HoappComponentType {

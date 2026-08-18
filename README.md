@@ -6,7 +6,7 @@ TypeScript library for Node.js 20+ (ESM). Call `extract()` from your application
 
 | | |
 | --- | --- |
-| Version | `0.4.0` |
+| Version | `0.5.0` |
 | Runtime | Node.js ≥ 20 (ESM) |
 | Format | HoApp, AST OnePage |
 | License | UNLICENSED |
@@ -51,7 +51,7 @@ for (const doc of result.documents) {
 
 One entry in `documents[]` per screen, in package order. Media are represented as markers in `text` (`[IMAGE_n]`, `[PDF_n]`, `[VIDEO_n]`); matching assets live in that screen’s `images` / `pdfs` / `videos` arrays. Indices restart at `0` on every screen. Marker and `ref` stay in 1:1 correspondence.
 
-Documents with `kind: "quiz"` also include a structured `quiz` field (`questions[]` with SCORM interaction `type`, `question`, optional `context`, `responses`, `feedback`). Linearized `text` is unchanged. Today only `type: "choice"` is fully structured; other authoring types become `type: "other"` and a `unsupported_quiz_type` warning. Missing answer keys set every `correct` to `false` and emit `quiz_missing_answer_key`. Monitor those codes on `result.warnings` (they are prefixes: `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`).
+Documents with `kind: "quiz"` also include a structured `quiz` field (`questions[]` with SCORM interaction `type`, `question`, optional `context`, `responses`, `feedback`). Linearized `text` is unchanged. Today only `type: "choice"` is fully structured; other authoring types become `type: "other"` and a `unsupported_quiz_type` warning. Missing answer keys set every `correct` to `false` and emit `quiz_missing_answer_key`. Packages with 4+ screens and almost no useful text (markers stripped, mean below 40 characters per screen) emit `suspicious_empty_extraction`. Monitor those codes on `result.warnings` (they are prefixes: `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`).
 
 ```ts
 for (const doc of result.documents) {

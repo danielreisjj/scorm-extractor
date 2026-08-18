@@ -65,7 +65,10 @@ export class HoappParser implements PackageParser {
     const corpus = [
       ...ir.sections.map((section) => section.content),
       ...[...ir.components.values()].map((component) =>
-        asString(component.data.label),
+        [
+          asString(component.data.label),
+          asString(component.data.value),
+        ].join(" "),
       ),
     ].join(" ");
     if (looksLikeLeftoverTitle(ir.course.title, corpus)) {

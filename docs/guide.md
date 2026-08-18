@@ -91,6 +91,9 @@ for (const warning of result.warnings) {
   if (warning.startsWith(WarningCode.QUIZ_MISSING_ANSWER_KEY)) {
     // responses.correct is false for every option; do not score from this quiz
   }
+  if (warning.startsWith(WarningCode.SUSPICIOUS_EMPTY_EXTRACTION)) {
+    // many screens, almost no useful text — likely a missed dialect, not an empty course
+  }
 }
 
 for (const doc of result.documents) {
@@ -180,6 +183,7 @@ Soft issues go to `result.warnings[]`. Extraction **continues**. Known warnings 
 | `Could not read image dimensions for '…' in tela_X` | File exists but PNG/JPEG/GIF/WebP header could not be parsed; `width`/`height` stay `null`. |
 | `unsupported_quiz_type: …` | A question was not recognized as `choice` and was emitted as `type: "other"`. Message includes the authoring type when known and the `documentId`. Match with `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`. |
 | `quiz_missing_answer_key: …` | A quiz had no identifiable answer key. Questions are still present; every `responses[].correct` is `false`. Match with `warning.startsWith(WarningCode.QUIZ_MISSING_ANSWER_KEY)`. |
+| `suspicious_empty_extraction: …` | The package has **4 or more** screens and the mean useful character count per screen is **below 40**. Useful text is linearized `text` with `[IMAGE_n]` / `[PDF_n]` / `[VIDEO_n]` stripped. This is a warning, not an error: extraction continues so a pipeline can flag silent misses (empty HoApp-B `as-texto` stubs, future dialects). Short 7-screen video wrappers stay above the threshold. Match with `warning.startsWith(WarningCode.SUSPICIOUS_EMPTY_EXTRACTION)`. |
 
 ```ts
 import { extract, ErrorCode, isScormExtractorError } from "scorm-extractor";

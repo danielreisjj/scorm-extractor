@@ -7,6 +7,8 @@
 export const WarningCode = {
   UNSUPPORTED_QUIZ_TYPE: "unsupported_quiz_type",
   QUIZ_MISSING_ANSWER_KEY: "quiz_missing_answer_key",
+  /** @since 0.5.0 */
+  SUSPICIOUS_EMPTY_EXTRACTION: "suspicious_empty_extraction",
 } as const;
 
 /** @since 0.3.0 */
