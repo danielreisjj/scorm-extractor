@@ -127,6 +127,13 @@ Contract details, field notes, and consumer patterns: [docs/guide.md](docs/guide
 | AST OnePage (`ast_onepage_actions.js` + `resources/mN/index.html`) | Supported |
 | Storyline, Rise, Captivate, other | Throws `UnsupportedPackageFormatError` with `detectedFormat` |
 
+## Unsupported formats
+
+These cases are **refused with a typed error** (`UnsupportedPackageFormatError` / `UNSUPPORTED_PACKAGE_FORMAT`, plus `detectedFormat`). Extraction does not fail silently — catch that code and handle those packages elsewhere.
+
+- **Storyline (Articulate).** Pedagogical copy is rasterized into slide images, not extractable text, and the slide→background-image mapping is resolved only at player runtime (there is no static slide→image reference in `data.js`). A static parser cannot recover that content reliably. Those packages need dedicated OCR with slide capture, which is out of scope for this library.
+- **Packages that do not render / incomplete.** Packages that depend on external resources (content hosted outside the ZIP) and cannot render on their own are refused as an unrecognized format. There is no recoverable content inside the package.
+
 ## Errors
 
 Failures throw a `ScormExtractorError` subclass with a stable `code`:

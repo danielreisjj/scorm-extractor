@@ -211,6 +211,13 @@ SCORM is an envelope. Content lives in the authoring export.
 | Captivate | Not parsed | `detectedFormat: "captivate"` |
 | Other | Not parsed | `detectedFormat: "unknown"` |
 
+### Unsupported formats
+
+The library **throws** `UnsupportedPackageFormatError` (`UNSUPPORTED_PACKAGE_FORMAT` + `detectedFormat`) rather than returning an empty extract. Catch that code and route those packages separately.
+
+- **Storyline (Articulate).** Detected and refused. Pedagogical copy is rasterized into slide images, not extractable text, and the slide→background-image mapping is resolved only at player runtime (there is no static slide→image reference in `data.js`). A static parser cannot recover that content reliably. Those packages require dedicated OCR with slide capture, which is out of scope.
+- **Packages that do not render / incomplete.** Packages that depend on external resources (content hosted outside the ZIP) and cannot render on their own are refused as an unrecognized format. There is no recoverable content inside the package.
+
 Adding a new format = new parser + registry entry; **same** `extract()` and markers. See [architecture.md](architecture.md).
 
 ## Consumer-side integration

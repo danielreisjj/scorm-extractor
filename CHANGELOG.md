@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Docs
+
+- Documented why Storyline packages are refused (`UnsupportedPackageFormatError`): pedagogical copy is rasterized into slide images and the slide→background mapping is runtime-only, so a static parser cannot recover content reliably (dedicated OCR / slide capture is out of scope).
+
 ## [0.5.3] - 2026-08-18
 
 ### Changed
