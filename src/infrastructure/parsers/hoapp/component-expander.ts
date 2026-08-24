@@ -19,6 +19,10 @@ const TAG_TO_TYPE: Record<string, HoappComponentType> = {
   "as-trava-via-click": "lock",
   "as-assessment": "assessment",
   "as-question": "question",
+  "as-texto": "text",
+  "as-titulo": "text",
+  "as-subtitulo": "text",
+  "as-paragrafo": "text",
 };
 
 export function expandComponents(
@@ -69,8 +73,10 @@ function expandComponent(component: HoappComponent, innerHtml: string): string {
       return expandAssessment(component.data, innerHtml);
     case "question":
       return expandQuestion(component.data, innerHtml);
+    case "text":
+      return asString(component.data.value) || innerHtml;
     default:
-      return innerHtml;
+      return asString(component.data.value) || innerHtml;
   }
 }
 

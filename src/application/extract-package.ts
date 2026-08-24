@@ -19,6 +19,7 @@ import type {
   PackageReader,
   ParserRegistry,
 } from "../domain/ports.js";
+import { suspiciousEmptyExtractionWarning } from "./suspicious-empty-extraction.js";
 
 export type ExtractSource = string | URL | Uint8Array | Buffer;
 
@@ -55,9 +56,14 @@ export async function extractPackage(
     );
   }
   const result = await parser.parse(reader, resolved);
+  const emptyWarning = suspiciousEmptyExtractionWarning(result.documents);
+  const warnings = emptyWarning
+    ? [...result.warnings, emptyWarning]
+    : result.warnings;
   try {
     return extractionResultSchema.parse({
       ...result,
+      warnings,
       schemaVersion: EXTRACTION_SCHEMA_VERSION,
     });
   } catch (error) {

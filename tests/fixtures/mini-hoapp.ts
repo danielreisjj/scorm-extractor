@@ -10,7 +10,7 @@ export const MINI_HOAPP_DATA_JS = `
 const { SectionEditable, VideoEditable } = HoApp;
 const iCourse = {
 	id: 1,
-	title: \`Mini curso Atletismo\`,
+	title: \`Mini curso Exemplo\`,
 	code: \`TST\`,
 	language: \`pt\`,
 };

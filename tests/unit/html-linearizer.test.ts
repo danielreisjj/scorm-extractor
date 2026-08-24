@@ -25,7 +25,7 @@ describe("linearizeHtml", () => {
   it("inserts PDF and VIDEO markers that match array refs", () => {
     const html = `
       <p>Leia o material</p>
-      <a onclick="window.open('midias/docs/atividade01.pdf')">Atividade</a>
+      <a onclick="window.open('midias/docs/arquivo01.pdf')">Atividade</a>
       <span data-extract-video="vid1"></span>
     `;
     const result = linearizeHtml(html, {
@@ -53,11 +53,11 @@ describe("linearizeHtml", () => {
 
   it("keeps button label and emits PDF from window.open", () => {
     const html = `
-      <p>Clique para baixar as atividades.</p>
+      <p>Clique para baixar o material.</p>
       <button onclick="window.open('midias/docs/x.pdf')" class="bt-download">Download</button>
     `;
     const result = linearizeHtml(html, { videosById: new Map() });
-    expect(result.text).toContain("Clique para baixar as atividades.");
+    expect(result.text).toContain("Clique para baixar o material.");
     expect(result.text).toContain("Download");
     expect(result.text).toContain("[PDF_0]");
     expect(result.pdfs[0]?.originalPath).toBe("midias/docs/x.pdf");
@@ -72,7 +72,7 @@ describe("linearizeHtml", () => {
   });
 
   it("skips chrome images", () => {
-    const html = `<img class="img-logo" src="midias/imagens/logo_cob-cor.png"><img src="midias/interface/marca.svg">`;
+    const html = `<img class="img-logo" src="midias/imagens/logo.png"><img src="midias/interface/marca.svg">`;
     const result = linearizeHtml(html, { videosById: new Map() });
     expect(result.images).toEqual([]);
     expect(result.text).not.toContain("[IMAGE_0]");

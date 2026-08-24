@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import { extract, toJSON } from "../../src/index.js";
 
-const VIMEO_URL = "https://player.vimeo.com/video/1110081348";
+const VIMEO_URL = "https://player.vimeo.com/video/123";
 const YOUTUBE_URL = "https://www.youtube.com/embed/dQw4w9WgXcQ";
 
 function hoappWithRemoteVideos(content: string, videos: string): string {
@@ -39,7 +39,7 @@ describe("remote video URLs are preserved", () => {
         version: 2,
         videoType: "VIMEO",
         path: VIMEO_URL,
-        title: "Respeito",
+        title: "Vídeo Exemplo",
       })});`,
     ).replace("components: []", "components: [cvid]");
 
@@ -49,7 +49,7 @@ describe("remote video URLs are preserved", () => {
       ref: "VIDEO_0",
       source: "vimeo",
       url: VIMEO_URL,
-      title: "Respeito",
+      title: "Vídeo Exemplo",
       bytes: null,
       originalPath: null,
       filename: null,
@@ -138,7 +138,7 @@ describe("remote video URLs are preserved", () => {
         version: 2,
         videoType: "VIMEO",
         path: VIMEO_URL,
-        title: "Respeito",
+        title: "Vídeo Exemplo",
       })});`,
     ).replace("components: []", "components: [cvid]");
 
@@ -151,7 +151,7 @@ describe("remote video URLs are preserved", () => {
       const vimeo = payload.documents[0]?.videos.find((v) => v.source === "vimeo");
       const youtube = payload.documents[0]?.videos.find((v) => v.source === "youtube");
       expect(vimeo?.url).toBe(VIMEO_URL);
-      expect(vimeo?.title).toBe("Respeito");
+      expect(vimeo?.title).toBe("Vídeo Exemplo");
       expect(vimeo?.bytes).toBeNull();
       expect(youtube?.url).toBe(YOUTUBE_URL);
       expect(youtube?.bytes).toBeNull();

@@ -48,6 +48,8 @@ docs/                # human guide + architecture
 - `kind`: `"screen" | "quiz"`. Quiz documents include structured `quiz`; screens must not. No `documents[].title`. No `images[].role`.
 - Errors must be `ScormExtractorError` subclasses with stable `ErrorCode`.
 - Never log base64 or dump `scorms/` (client material); never commit `.cursor/`, `private/`, or client ZIPs.
+- Do **not** commit CI/automation: no GitHub Actions, workflows, pipelines, build/coverage badges, or git hooks. The team keeps that infrastructure out of small, focused libraries.
+- Tests stay and are valued — they are the library's safety net. Run them on demand locally (`npm test`, `npm run lint`, `tsc`); do not add versioned CI to execute them. Analysis tools already in `devDependencies` (`jscpd`, `knip`, `@vitest/coverage-v8`) are for manual/ad-hoc audits, not an automatic pipeline.
 
 ## Scope
 

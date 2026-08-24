@@ -24,7 +24,7 @@ extract(source, options)
 1. Read `js/data.js`
 2. Detect dialect A (`new SectionEditable`) vs B (`type: 'as-…'`)
 3. Build IR (course, components, sections)
-4. Expand interactive components (accordion, quiz, …) into HTML
+4. Expand interactive components (accordion, quiz, `as-texto` / `data.value`, …) into HTML
 5. Dedupe desktop/tablet/mobile duplicates
 6. Linearize DOM → text + markers
 7. Load bytes per `includeBytes`

@@ -6,7 +6,7 @@ TypeScript library for Node.js 20+ (ESM). Call `extract()` from your application
 
 | | |
 | --- | --- |
-| Version | `0.4.0` |
+| Version | `0.5.3` |
 | Runtime | Node.js ≥ 20 (ESM) |
 | Format | HoApp, AST OnePage |
 | License | UNLICENSED |
@@ -38,6 +38,18 @@ for (const doc of result.documents) {
 }
 ```
 
+## Local batch extraction
+
+Drop SCORM ZIPs into `scorms/` (gitignored), then run:
+
+```bash
+npm run extract:all
+```
+
+Each ZIP is extracted to `output/<name>.json` (no image/PDF bytes). Packages are
+processed independently — a failing package is skipped and listed in the run
+summary instead of aborting the batch.
+
 ## Options
 
 | Option | Default | Description |
@@ -51,7 +63,7 @@ for (const doc of result.documents) {
 
 One entry in `documents[]` per screen, in package order. Media are represented as markers in `text` (`[IMAGE_n]`, `[PDF_n]`, `[VIDEO_n]`); matching assets live in that screen’s `images` / `pdfs` / `videos` arrays. Indices restart at `0` on every screen. Marker and `ref` stay in 1:1 correspondence.
 
-Documents with `kind: "quiz"` also include a structured `quiz` field (`questions[]` with SCORM interaction `type`, `question`, optional `context`, `responses`, `feedback`). Linearized `text` is unchanged. Today only `type: "choice"` is fully structured; other authoring types become `type: "other"` and a `unsupported_quiz_type` warning. Missing answer keys set every `correct` to `false` and emit `quiz_missing_answer_key`. Monitor those codes on `result.warnings` (they are prefixes: `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`).
+Documents with `kind: "quiz"` also include a structured `quiz` field (`questions[]` with SCORM interaction `type`, `question`, optional `context`, `responses`, `feedback`). Linearized `text` is unchanged. Today only `type: "choice"` is fully structured; other authoring types become `type: "other"` and a `unsupported_quiz_type` warning. Missing answer keys set every `correct` to `false` and emit `quiz_missing_answer_key`. Packages with 4+ screens and almost no useful text (markers stripped, mean below 40 characters per screen) emit `suspicious_empty_extraction`. Monitor those codes on `result.warnings` (they are prefixes: `warning.startsWith(WarningCode.UNSUPPORTED_QUIZ_TYPE)`).
 
 ```ts
 for (const doc of result.documents) {
@@ -126,6 +138,13 @@ Contract details, field notes, and consumer patterns: [docs/guide.md](docs/guide
 | HoApp (`js/data.js` / `as-course`) | Supported |
 | AST OnePage (`ast_onepage_actions.js` + `resources/mN/index.html`) | Supported |
 | Storyline, Rise, Captivate, other | Throws `UnsupportedPackageFormatError` with `detectedFormat` |
+
+## Unsupported formats
+
+These cases are **refused with a typed error** (`UnsupportedPackageFormatError` / `UNSUPPORTED_PACKAGE_FORMAT`, plus `detectedFormat`). Extraction does not fail silently — catch that code and handle those packages elsewhere.
+
+- **Storyline (Articulate).** Pedagogical copy is rasterized into slide images, not extractable text, and the slide→background-image mapping is resolved only at player runtime (there is no static slide→image reference in `data.js`). A static parser cannot recover that content reliably. Those packages need dedicated OCR with slide capture, which is out of scope for this library.
+- **Packages that do not render / incomplete.** Packages that depend on external resources (content hosted outside the ZIP) and cannot render on their own are refused as an unrecognized format. There is no recoverable content inside the package.
 
 ## Errors
 

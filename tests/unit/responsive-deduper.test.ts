@@ -4,12 +4,12 @@ import { dedupeResponsiveHtml } from "../../src/infrastructure/parsers/html/resp
 describe("dedupeResponsiveHtml", () => {
   it("keeps desktop copy and drops tablet/mobile duplicates", () => {
     const html = `
-      <div class="box desktop-only"><p>Considerações finais</p></div>
-      <div class="box tablet-only"><p>Considerações finais</p></div>
-      <div class="box mobile-only"><p>Considerações finais</p></div>
+      <div class="box desktop-only"><p>Texto duplicado</p></div>
+      <div class="box tablet-only"><p>Texto duplicado</p></div>
+      <div class="box mobile-only"><p>Texto duplicado</p></div>
     `;
     const out = dedupeResponsiveHtml(html);
-    expect(out.match(/Considerações finais/g)).toHaveLength(1);
+    expect(out.match(/Texto duplicado/g)).toHaveLength(1);
     expect(out).toContain("desktop-only");
     expect(out).not.toContain("tablet-only");
     expect(out).not.toContain("mobile-only");

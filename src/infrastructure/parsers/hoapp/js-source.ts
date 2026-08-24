@@ -68,26 +68,6 @@ export function extractTemplateLiteral(source: string, openBacktick: number): st
   throw new InvalidPackageError("Unterminated template literal in js/data.js");
 }
 
-export function indexOfUnquoted(source: string, needle: string, from = 0): number {
-  let quote: string | null = null;
-  let escape = false;
-  for (let i = from; i < source.length; i += 1) {
-    const char = source[i];
-    if (quote) {
-      if (escape) escape = false;
-      else if (char === "\\") escape = true;
-      else if (char === quote) quote = null;
-      continue;
-    }
-    if (char === '"' || char === "'" || char === "`") {
-      quote = char;
-      continue;
-    }
-    if (source.startsWith(needle, i)) return i;
-  }
-  return -1;
-}
-
 export function readJsStringField(objectSource: string, field: string): string {
   const backtick = new RegExp(`${field}\\s*:\\s*\``).exec(objectSource);
   if (backtick && backtick.index !== undefined) {

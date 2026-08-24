@@ -12,6 +12,9 @@ describe("package public API", () => {
     expect(typeof extract).toBe("function");
     expect(WarningCode.UNSUPPORTED_QUIZ_TYPE).toBe("unsupported_quiz_type");
     expect(WarningCode.QUIZ_MISSING_ANSWER_KEY).toBe("quiz_missing_answer_key");
+    expect(WarningCode.SUSPICIOUS_EMPTY_EXTRACTION).toBe(
+      "suspicious_empty_extraction",
+    );
   });
 
   it("rejects a corrupt zip", async () => {
