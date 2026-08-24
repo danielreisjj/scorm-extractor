@@ -38,6 +38,18 @@ for (const doc of result.documents) {
 }
 ```
 
+## Local batch extraction
+
+Drop SCORM ZIPs into `scorms/` (gitignored), then run:
+
+```bash
+npm run extract:all
+```
+
+Each ZIP is extracted to `output/<name>.json` (no image/PDF bytes). Packages are
+processed independently — a failing package is skipped and listed in the run
+summary instead of aborting the batch.
+
 ## Options
 
 | Option | Default | Description |
