@@ -133,6 +133,7 @@ function encodeImage(image: ImageAsset, omitBytes: boolean): ImageAssetJSON {
     byteSize: image.byteSize,
     bytesStatus: image.bytesStatus,
     bytes: omitBytes ? null : encodeBytes(image.bytes),
+    url: image.url,
   };
 }
 
@@ -144,6 +145,7 @@ function encodePdf(pdf: PdfAsset, omitBytes: boolean): PdfAssetJSON {
     filename: pdf.filename,
     bytesStatus: pdf.bytesStatus,
     bytes: omitBytes ? null : encodeBytes(pdf.bytes),
+    url: pdf.url,
   };
 }
 
