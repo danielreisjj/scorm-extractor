@@ -106,7 +106,7 @@ export function linearizeHtml(
       byteSize: null,
       bytes: null,
       bytesStatus: "omitted",
-      url,
+      url: null,
     });
     pushBlock();
     pushText(`[${ref}]`);
@@ -127,7 +127,7 @@ export function linearizeHtml(
       filename: filenameFromPath(path),
       bytes: null,
       bytesStatus: "omitted",
-      url,
+      url: null,
     });
     pushBlock();
     pushText(`[${ref}]`);
