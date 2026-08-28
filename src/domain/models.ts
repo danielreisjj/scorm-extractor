@@ -97,6 +97,7 @@ const imageAssetFields = {
   /** File size in the ZIP (`null` if missing). @since 0.3.0 */
   byteSize: z.number().int().nonnegative().nullable(),
   bytesStatus: bytesStatusSchema,
+  url: z.string().nullable(),
 };
 
 export const imageAssetSchema = z.object({
@@ -115,6 +116,7 @@ const pdfAssetFields = {
   originalPath: z.string(),
   filename: z.string(),
   bytesStatus: bytesStatusSchema,
+  url: z.string().nullable(),
 };
 
 export const pdfAssetSchema = z.object({
